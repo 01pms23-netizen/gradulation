@@ -347,7 +347,8 @@
           </svg>
         </div>
         <div class="mascotCaption" style="margin-top:10px">토끼가 결과에 따라 표정을 바꿉니다 🐰</div>
-        <div style="margin-top:8px"><button class="btn no-print" id="viewReportBtn">자세히 보기</button> <button class="btn secondary no-print" onclick="saveSummaryToHistory()">히스토리 저장</button></div>
+        <div style="margin-top:8px"><button class="btn no-print" id="viewReportBtn">자세히 보기</button>
+          <button class="btn secondary no-print" onclick="startOver()">🔄 다시 하기</button></div>
       </div>
     </div>
 
@@ -367,7 +368,7 @@
       <div style="text-align:right">
         <button class="btn secondary no-print" onclick="backToSummary()">← 요약 보기</button>
         <button class="btn no-print" onclick="downloadPDF()">PDF 저장</button>
-        <button class="btn secondary no-print" onclick="toggleHistory()">히스토리</button>
+        <button class="btn secondary no-print" onclick="startOver()" style="margin-left: 8px;">🔄 다시 하기</button>
       </div>
     </div>
 
@@ -1021,6 +1022,58 @@ function backToSummary() {
   document.getElementById('summaryCard').style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' }); // 화면 상단으로 이동
 }
+
+/* 🔄 설문조사 다시 시작 (첫 화면으로 돌아가기 + 내용 초기화) */
+function startOver() {
+  // 결과 화면 모두 숨기기
+  document.getElementById('summaryCard').style.display = 'none';
+  document.getElementById('reportCard').style.display = 'none';
+  document.getElementById('rankingSection').style.display = 'none';
+
+  // 설문조사 카드 표시
+  document.getElementById('surveyCard').style.display = 'block';
+  
+  // 1. 모든 입력 필드 초기화 (text, number, select, textarea)
+  document.getElementById('surveyForm').reset();
+
+  // 2. 커스텀 체크박스/라디오 버튼 및 스타일 초기화
+  // 2-1. family history 및 checkbtn 스타일 초기화
+  document.querySelectorAll('.checkbtn').forEach(btn => {
+      const inp = btn.querySelector('input');
+      if (inp) inp.checked = false;
+      btn.classList.remove('active');
+  });
+
+  // 2-2. 심각도(severity) 체크박스 초기화
+  document.querySelectorAll('input[name^="sev_"]').forEach(cb => {
+      cb.checked = false;
+  });
+
+  // 3. BMI 텍스트 초기화
+  document.getElementById('bmiText').innerText = '';
+
+  // 4. 동적 섹션 (흡연/음주 디테일) 숨기기
+  document.getElementById('smoke_details').style.display = 'none';
+  document.getElementById('drink_details').style.display = 'none';
+
+  // 5. 유효성 검사 경고 및 스타일 초기화 (모든 단계)
+  for (let i = 0; i < steps.length; i++) {
+    clearInvalidForStep(i);
+  }
+  
+  // 6. 첫 번째 단계로 이동
+  showStep(0); 
+
+  // 7. 결과 데이터 초기화
+  try {
+    localStorage.removeItem('lastResult');
+    lastResult = null; // 전역 변수 초기화
+  } catch(e) { console.warn('Local storage clear fail', e); }
+
+  // 8. 마스코트 표정 초기화 (웃는 표정으로 변경)
+  updateMascot(75);
+}
+
 
 /* ============================================================
   🔐 관리자 모드 간편 초기화 (버튼 없음, 랭킹창 유지)
