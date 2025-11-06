@@ -82,6 +82,56 @@
 
   /* small responsive tweak for pdf slices */
   .report-wrap{padding:8px}
+
+  /* 🚀 랭킹 상위 3명 강조 스타일 */
+  .rank-gold{background:#fff8e1; font-weight:900; color:var(--navy); border-left: 4px solid #ffcc00;}
+  .rank-silver{background:#f0f4f8; font-weight:800; color:#445;}
+  .rank-bronze{background:#f5f7f9; font-weight:700; color:#555;}
+
+
+  /* ... 기존 CSS 코드 ... */
+
+  /* 🚀 태블릿/아이패드 세로 모드 (Portrait, ~1024px) 최적화 */
+  @media (min-width: 768px) and (max-width: 1365px) {
+    /* 캔버스 (차트) 높이 추가 압축 */
+    canvas {
+        height: 180px; 
+    }
+
+    /* 상세 리포트 항목 (detail-card) 압축 */
+    .detail-card {
+        padding: 8px !important;
+        margin-bottom: 5px !important; /* 마진 더 줄임 */
+        font-size: 14px;
+    }
+    
+    /* 제목 및 부제 여백 축소 */
+    .report-wrap {
+        margin-top: 8px !important;
+        padding: 4px;
+    }
+
+    /* 작은 텍스트와 목록 글꼴 크기 조정 */
+    .small, .muted, #planContent li {
+        font-size: 11px;
+    }
+    
+    /* 개인 맞춤 플랜 목록 여백 축소 */
+    #planContent ul {
+        margin: 4px 0 0 16px;
+        padding-left: 0;
+    }
+    #planContent h3 {
+        font-size: 16px;
+    }
+  }
+
+  /* 기존 print 모드 스타일 유지 (PDF 출력 압축) */
+  @media print{
+    /* ... (기존 PDF 압축 CSS 유지) ... */
+    canvas{max-height:140px !important} 
+    /* ... */
+  }
 </style>
 </head>
 <body>
@@ -94,6 +144,15 @@
         <h1>🩺 건강 위험도 자가진단 START</h1>
         <p class="lead">총 11문항 설문 후 요약 및 상세 리포트를 제공합니다.</p>
       </div>
+      <div style="margin-bottom: 12px; text-align: center;">
+      <button class="btn secondary no-print" onclick="viewLeaderboardFromStart()">
+        🏆 랭킹 보기
+      </button>
+    </div>
+    
+    <div class="progress"><i id="progressBar"></i></div>
+
+    <form id="surveyForm" onsubmit="return false">
       <div style="text-align:right">
         <div class="mascot" id="mascotSmall" title="건강 토끼">
           <!-- UPDATED: cuter flat rabbit face -->
@@ -964,8 +1023,7 @@ rankingSection.innerHTML = `
     <tbody id="rankingBody"></tbody>
   </table>
   <div style="text-align:right;margin-top:14px">
-    <button class="btn secondary" onclick="backToSummary()">← 요약으로 돌아가기</button>
-  </div>
+<button class="btn secondary" id="rankingReturnBtn" onclick="returnFromRanking()">← 요약으로 돌아가기</button>  </div>
 `;
 document.querySelector('.app').appendChild(rankingSection);
 
@@ -974,7 +1032,7 @@ function updateLeaderboard(name, score) {
   const data = JSON.parse(localStorage.getItem('leaderboard') || '[]');
   data.push({ name, score, time: new Date().toISOString() });
   data.sort((a, b) => b.score - a.score); // 점수 내림차순
-  const trimmed = data.slice(0, 10); // 상위 10명만 유지
+  const trimmed = data.slice(0, 50); // 상위 10명만 유지
   localStorage.setItem('leaderboard', JSON.stringify(trimmed));
   return trimmed;
 }
@@ -983,17 +1041,50 @@ function updateLeaderboard(name, score) {
 // 🖥️ 랭킹 렌더링
 function renderLeaderboard(currentName, currentScore) {
   const tbody = document.getElementById('rankingBody');
-  const data = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+  // 랭킹은 updateLeaderboard에서 이미 점수 내림차순으로 정렬된 상태입니다.
+  const data = JSON.parse(localStorage.getItem('leaderboard') || '[]'); 
   if (!tbody) return;
+
   tbody.innerHTML = data.length
-    ? data.map((p, i) => `
-        <tr ${p.name === currentName && p.score === currentScore ? 'style="background:#e8f3ff;font-weight:700;color:var(--accent)"' : ''}>
-          <td>${i + 1}</td>
-          <td>${p.name}</td>
-          <td>${p.score}</td>
-          <td>${new Date(p.time).toLocaleDateString()}</td>
-        </tr>
-      `).join('')
+    ? data.map((p, i) => {
+        const rank = i + 1;
+        let rankClass = '';
+        
+        // 🚀 상위 3명에 따라 클래스 지정
+        if (rank === 1) {
+          rankClass = 'rank-gold';
+        } else if (rank === 2) {
+          rankClass = 'rank-silver';
+        } else if (rank === 3) {
+          rankClass = 'rank-bronze';
+        }
+
+        // 현재 참가자와 일치하면 추가 강조
+        const isCurrent = p.name === currentName && p.score === currentScore;
+        
+        // 🚀 [수정 핵심] yyyy/mm/dd HH:MM 형식으로 포맷팅
+        const dateObj = new Date(p.time);
+        
+        // 월과 일, 시와 분이 한 자릿수일 때 앞에 '0'을 붙입니다.
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const hour = String(dateObj.getHours()).padStart(2, '0');
+        const minute = String(dateObj.getMinutes()).padStart(2, '0');
+
+        // 요청하신 형식으로 조합 (yyyy / mm / dd / 24:00)
+        const dateTimeString = `${year}/${month}/${day} ${hour}:${minute}`;
+
+        // 최종 TR 태그 구성
+        return `
+          <tr class="${rankClass}" ${isCurrent && rank > 3 ? 'style="background:#e8f3ff;font-weight:700;color:var(--accent)"' : ''}>
+            <td>${rank}</td>
+            <td>${p.name}</td>
+            <td>${p.score}</td>
+            <td>${dateTimeString}</td>
+          </tr>
+        `;
+      }).join('')
     : `<tr><td colspan="4" style="text-align:center;padding:10px;">저장된 데이터가 없습니다.</td></tr>`;
 }
 
@@ -1001,41 +1092,67 @@ function renderLeaderboard(currentName, currentScore) {
 // 🧾 요약 생성 후 “랭킹 보기” 버튼 추가
 const originalCompute = computeAndShowSummary;
 computeAndShowSummary = function() {
-  originalCompute(); // 기존 기능 실행
+  originalCompute(); // 기존 기능 실행 (점수 계산 및 lastResult 설정)
 
-  // [1] '히스토리 저장' 버튼 제거 (ID가 달라도 텍스트 기준으로 탐색)
+  // 🚀 [새로운 저장 로직] 결과가 계산되는 시점(요약 화면 표시 전)에 한 번만 랭킹에 저장
+  if (lastResult && lastResult.name && lastResult.score) {
+      updateLeaderboard(lastResult.name, lastResult.score);
+  }
+  
+  // [1] '히스토리 저장' 버튼 제거 (텍스트 기준으로 탐색)
   const buttons = document.querySelectorAll('#summaryCard button');
   buttons.forEach(btn => {
     if (btn.textContent.includes('히스토리 저장')) btn.remove();
   });
 
-  // [2] 랭킹 보기 버튼 추가 (중복 방지)
-  if (!document.getElementById('rankBtn')) {
-    const btn = document.createElement('button');
-    btn.id = 'rankBtn';
-    btn.className = 'btn secondary';
-    btn.textContent = '🏆 랭킹 보기';
-    btn.style.marginTop = '12px';
-    btn.onclick = () => {
-      updateLeaderboard(lastResult.name, lastResult.score);
-      renderLeaderboard(lastResult.name, lastResult.score);
-      document.getElementById('summaryCard').style.display = 'none';
-      document.getElementById('rankingSection').style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-    document.getElementById('summaryCard').appendChild(btn);
-  }
+ // [2] 랭킹 보기 버튼 추가 (중복 방지)
+  let btn = document.getElementById('rankBtn');
+  // ... (버튼 생성 로직 생략) ...
+  
+  // ⭐️ 랭킹 보기 버튼의 onclick 로직은 이제 저장 없이 화면 전환만 담당합니다.
+  btn.onclick = () => {
+    // ... (이전과 동일한 화면 전환 및 텍스트 설정 로직) ...
+    isFromSummary = true; 
+    const rbtn = document.getElementById('rankingReturnBtn');
+    if (rbtn) {
+        rbtn.textContent = '← 요약으로 돌아가기'; 
+        rbtn.onclick = returnFromRanking; 
+    }
+    
+    // ⭐️ (변경됨) 저장 로직은 제거하고, 오직 렌더링만 호출합니다.
+    renderLeaderboard(lastResult.name, lastResult.score); 
+    
+    document.getElementById('summaryCard').style.display = 'none';
+    document.getElementById('rankingSection').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 };
 
+let isFromSummary = false; // 현재 랭킹 화면으로 진입한 경로를 추적하는 플래그
 
-
-// 🧭 요약으로 돌아가기 (랭킹 또는 상세 리포트에서 요약 화면으로 돌아갈 때 사용)
-function backToSummary() {
+/* 🏆 랭킹 화면에서 복귀 (경로에 따라 분기) */
+function returnFromRanking() {
   document.getElementById('rankingSection').style.display = 'none';
-  // 🚀 상세 리포트 카드도 숨깁니다.
-  document.getElementById('reportCard').style.display = 'none'; 
+  window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  
+  if (isFromSummary) {
+    // 1. 요약/상세 페이지를 거쳐 랭킹으로 왔다면 -> 요약 페이지로 복귀
+    document.getElementById('summaryCard').style.display = 'block';
+    // isFromSummary = false; // 플래그 유지
+  } else {
+    // 2. 시작 페이지에서 바로 랭킹으로 왔다면 -> 설문조사 시작 페이지로 복귀
+    document.getElementById('surveyCard').style.display = 'block';
+  }
+}
+
+// 🧭 backToSummary 함수는 이제 returnFromRanking으로 대체하거나 용도를 변경합니다.
+// 기존 backToSummary가 다른 곳에서 쓰이므로, 여기서는 랭킹 복귀 버튼의 onclick만 returnFromRanking으로 연결합니다.
+
+// 🧭 상세 리포트에서 요약 화면으로 돌아가는 함수를 재정의합니다.
+function backToSummary() {
+  document.getElementById('reportCard').style.display = 'none';
   document.getElementById('summaryCard').style.display = 'block';
-  window.scrollTo({ top: 0, behavior: 'smooth' }); // 화면 상단으로 이동
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 /* 🔄 설문조사 다시 시작 (첫 화면으로 돌아가기 + 내용 초기화) */
@@ -1087,35 +1204,68 @@ function startOver() {
 
   // 8. 마스코트 표정 초기화 (웃는 표정으로 변경)
   updateMascot(75);
+
+  // 🚀 플래그 초기화
+  isFromSummary = false;
+  
+  // 랭킹 복귀 버튼 텍스트 초기화 (혹시 모를 오류 방지)
+  const rbtn = document.getElementById('rankingReturnBtn');
+  if (rbtn) {
+      rbtn.textContent = '← 요약으로 돌아가기'; // 기본값으로 복원
+  }
 }
 
+/* 🏆 시작 화면에서 랭킹 화면으로 바로 이동 */
+function viewLeaderboardFromStart() {
+  document.getElementById('surveyCard').style.display = 'none';
+  
+  // 🚀 (변경됨) 저장 로직은 제거하고 랭킹 렌더링만 호출합니다.
+  renderLeaderboard();
+  
+  // 🚀 플래그 설정 및 버튼 텍스트 변경
+  isFromSummary = false; 
+  const btn = document.getElementById('rankingReturnBtn');
+  if (btn) {
+      btn.textContent = '🔄 설문 시작하기';
+      btn.onclick = returnFromRanking; 
+  }
+  
+  document.getElementById('rankingSection').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 /* ============================================================
   🔐 관리자 모드 간편 초기화 (버튼 없음, 랭킹창 유지)
    ============================================================ */
-const ADMIN_PASS = "초기화";
+// ⭐️ 이 변수가 코드 상단에 정의되어 있어야 합니다!
+const ADMIN_PASS = "초기화"; 
 
 window.addEventListener("keydown", (e) => {
+  // 1. Shift + M 단축키가 눌렸을 때
   if (e.shiftKey && e.key.toLowerCase() === "m") {
     e.preventDefault();
+    // 2. pw 변수는 이 블록 안에서 유효합니다.
     const pw = prompt("관리자 비밀번호를 입력하세요:");
     
-    if (pw === ADMIN_PASS) {
+    // 3. 비밀번호가 ADMIN_PASS와 일치하는 경우
+    if (pw === ADMIN_PASS) { 
       // 🚀 관리자 메뉴 선택
       const action = prompt("관리자 모드입니다. 수행할 작업을 선택하세요:\n1. 모든 데이터 초기화\n2. 즉시 결과 보기 (점수 85점으로 가정)");
 
+      // 옵션 1: 데이터 초기화
       if (action === '1') {
         if (confirm("⚠️ 모든 랭킹 및 히스토리를 초기화하시겠습니까?")) {
           localStorage.removeItem("healthHistory");
           localStorage.removeItem("leaderboard");
           alert("✅ 모든 데이터가 초기화되었습니다.");
-          renderLeaderboard(); // 테이블 내용 즉시 갱신
-          startOver(); // 첫 화면으로 돌아가기
+          renderLeaderboard();
+          startOver();
         }
-      } else if (action === '2') {
-        // 🚀 즉시 결과 생성 및 요약 페이지로 이동 로직
-        
-        // 1. 필요한 기본 데이터 생성 (이름: 관리자, 점수: 85점)
+      } 
+      
+      // 옵션 2: 즉시 결과 보기
+      else if (action === '2') {
+        // 1. 필요한 기본 데이터 설정
         const mockScore = 85; 
         lastResult = {
           timestamp: Date.now(),
@@ -1126,54 +1276,68 @@ window.addEventListener("keydown", (e) => {
           perItemScore: { bmi: 85, family: 70, history: 90, smoke: 95, drink: 80, exercise: 85, diet: 75, sleep: 80, stress: 90 },
           r: {}, W: {}
         };
+        
+        // 랭킹 저장 및 플래그 설정 로직
+        if (lastResult && lastResult.name && lastResult.score) {
+          updateLeaderboard(lastResult.name, lastResult.score);
+        }
+        isFromSummary = true; 
 
-        // 2. 결과 렌더링 함수 호출
+        // 2. 결과 렌더링 함수 호출 및 화면 전환
         q('surveyCard').style.display = 'none';
         q('summaryCard').style.display = 'block';
-        
-        q('summaryTitle').innerText = `요약 — 관리자 점검`;
-        q('summaryText').innerText = `양호 • 관리자 점검 결과 (총점: ${mockScore}/100)`;
+
+        q('summaryTitle').innerText = `요약 - 관리자 점검`;
+        q('summaryText').innerText = `양호 • 관리자 점검 결과 (총점: ${lastResult.score}/100)`;
         
         renderSummaryChart(lastResult.perItemScore);
         renderSummaryItems(lastResult.perItemScore, lastResult.r);
-        updateMascot(mockScore);
+        updateMascot(lastResult.score);
         
-        // 3. 상세보기 버튼 연결
+        // 3. 상세보기 버튼 연결 및 랭킹 버튼 로직...
         q('viewReportBtn').onclick = () => { showDetailedReport(lastResult); };
 
-        // 🚀 4. "랭킹 보기" 버튼 수동 추가 로직 수정 (중복 방지)
-        
-        // 기존 랭킹 버튼이 있는지 확인하고 제거 (clean-up)
-        let existingBtn = document.getElementById('rankBtn');
-        if (existingBtn) {
-            existingBtn.remove();
+        const rbtn = document.getElementById('rankingReturnBtn');
+        if (rbtn) {
+            rbtn.textContent = '← 요약으로 돌아가기';
+            rbtn.onclick = returnFromRanking;
         }
 
-        // 새 랭킹 버튼 생성 및 추가
-        const btn = document.createElement('button');
-        btn.id = 'rankBtn'; // ID를 부여하여 다음번 체크 시 찾을 수 있도록 함
-        btn.className = 'btn secondary';
-        btn.textContent = '🏆 랭킹 보기';
-        btn.style.marginTop = '12px';
-        btn.onclick = () => {
-          updateLeaderboard(lastResult.name, lastResult.score);
-          renderLeaderboard(lastResult.name, lastResult.score);
-          document.getElementById('summaryCard').style.display = 'none';
-          document.getElementById('rankingSection').style.display = 'block';
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+        let btn = document.getElementById('rankBtn');
+        if (btn) btn.remove();
+        
+        const newBtn = document.createElement('button');
+        newBtn.id = 'rankBtn'; 
+        newBtn.className = 'btn secondary';
+        newBtn.textContent = '🏆 랭킹 보기';
+        newBtn.style.marginTop = '12px';
+        
+        newBtn.onclick = () => {
+            renderLeaderboard(lastResult.name, lastResult.score); 
+            
+            document.getElementById('summaryCard').style.display = 'none';
+            document.getElementById('rankingSection').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
-        q('summaryCard').appendChild(btn); // summaryCard의 가장 아래에 버튼 추가
+        q('summaryCard').appendChild(newBtn); 
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
         alert("✅ 관리자 모드로 즉시 결과 페이지에 진입합니다.");
 
-      } else if (pw !== null) {
+      } 
+      // 옵션을 제대로 선택하지 않은 경우 (1 또는 2가 아닌 경우)
+      else { 
         alert("❌ 올바른 옵션을 선택하지 않았습니다.");
       }
-    } else if (pw !== null) {
+      
+    } 
+    // 4. 비밀번호 불일치 처리 (pw 변수는 여기서 유효합니다)
+    else if (pw !== null) { 
       alert("❌ 비밀번호가 올바르지 않습니다.");
     }
-  }
+    // ⭐️ 이 자리는 if (e.shiftKey && e.key.toLowerCase() === "m")의 닫는 중괄호입니다.
+  } 
+  // ⭐️ 이 자리는 window.addEventListener("keydown", ...)의 닫는 괄호와 세미콜론입니다.
 });
 
 </script>
