@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>건강 위험도 자가진단 테스트</title>
+<title>사용자 설문 기반 자가진단 키오스크</title>
 
 <!-- libs -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -66,13 +66,17 @@
   /* subtle helper for invalid message */
   .invalid-note{color:#d14343;font-size:13px;margin-top:6px}
 
-  /* ensure cards are not split across pages for print */
+/* ensure cards are not split across pages for print */
   @media print{
     body{background:white}
     .card{page-break-inside: avoid; -webkit-print-color-adjust: exact}
     button, .pager, .no-print { display:none !important; }
     .mascotCaption{display:none}
-    canvas{max-height:220px !important}
+    /* 🚀 캔버스 최대 높이를 160px에서 140px로 추가 축소 */
+    canvas{max-height:140px !important} 
+    /* 🚀 상세 항목의 여백을 0으로 설정하여 압축 */
+    #detailList, #planSection { margin: 0 !important; padding: 0 !important; }
+    .detail-card { margin-bottom: 6px !important; padding: 6px !important; }
   }
   @page{ margin: 10mm; }
 
@@ -87,8 +91,8 @@
   <section class="card" id="surveyCard">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
       <div>
-        <h1>🩺 건강 위험도 자가진단</h1>
-        <p class="lead">총 11문항 테스트 후 요약 및 상세 리포트를 제공합니다.</p>
+        <h1>🩺 건강 위험도 자가진단 START</h1>
+        <p class="lead">총 11문항 설문 후 요약 및 상세 리포트를 제공합니다.</p>
       </div>
       <div style="text-align:right">
         <div class="mascot" id="mascotSmall" title="건강 토끼">
@@ -109,7 +113,7 @@
             <path id="bunnyMouth" d="M28 44 q4 4 8 0" stroke="#0b2340" stroke-width="1.8" fill="none" stroke-linecap="round"/>
           </svg>
         </div>
-        <div class="mascotCaption" id="mascotCaption">토끼가 결과에 따라 표정을 바꿉니다 🐰</div>
+        <div class="mascotCaption" id="mascotCaption">제가 결과에 따라 표정을 바꿀 거예요! 🐰</div>
       </div>
     </div>
 
@@ -127,7 +131,7 @@
       <!-- DEMO -->
       <div class="question" data-step="1" id="step1">
         <div class="row">
-          <div style="flex:1"><label class="block">연령 (만) <span class="small">(필수)</span></label><input type="number" id="age" min="10" max="120" /></div>
+          <div style="flex:1"><label class="block">연령(만) <span class="small">(필수)</span></label><input type="number" id="age" min="10" max="120" /></div>
           <div style="width:160px"><label class="block">성별 <span class="small">(필수)</span></label><select id="gender"><option value="">선택</option><option value="male">남성</option><option value="female">여성</option><option value="na">밝히고 싶지 않음</option></select></div>
         </div>
         <div class="invalid-note" id="note-step1" style="display:none">연령과 성별을 모두 선택해주세요.</div>
@@ -144,7 +148,7 @@
 
       <!-- FAMILY HISTORY -->
       <div class="question" data-step="3" id="step3">
-        <label class="block">가족력 (직계 가족 — 복수 선택 가능)</label>
+        <label class="block">가족력(직계 가족 - 복수 선택 가능)</label>
         <div class="checkbox-row" id="familyRow">
           <label class="checkbtn"><input type="checkbox" name="family" value="chd"> 관상동맥질환(심근경색) </label>
           <label class="checkbtn"><input type="checkbox" name="family" value="stroke"> 뇌졸중 </label>
@@ -160,13 +164,13 @@
           <label class="checkbtn"><input type="checkbox" name="family" value="autoimmune"> 자가면역질환(갑상선 포함) </label>
           <label class="checkbtn"><input type="checkbox" name="family" value="none"> 해당 없음</label>
         </div>
-        <label class="block">기타 (선택)</label><input type="text" id="family_other" placeholder="예: 특정 희귀질환 등">
+        <label class="block">기타(선택)</label><input type="text" id="family_other" placeholder="예: 특정 희귀질환 등">
         <div class="pager"><div class="meta">질문 4 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
       </div>
 
       <!-- PERSONAL HISTORY -->
       <div class="question" data-step="4" id="step4">
-        <label class="block">본인 병력(과거/현재) — 해당 시 체크 (복수 선택 가능). 각 항목에서 심각도를 선택하세요.</label>
+        <label class="block">본인 병력(과거/현재) - 해당 시 체크 (복수 선택 가능). 해당할 경우 항목에서 심각도를 선택하세요.</label>
 
         <div style="margin-bottom:10px">
           <label><input type="checkbox" name="history" value="diabetes"> 당뇨</label>
@@ -215,18 +219,18 @@
 
         <div style="margin-bottom:6px"><label><input type="checkbox" name="history" value="none"> 해당 없음</label></div>
 
-        <label class="block">기타 (선택)</label><input type="text" id="history_other" placeholder="예: 수술력, 만성질환 등">
+        <label class="block">기타(선택)</label><input type="text" id="history_other" placeholder="예: 수술력, 만성질환 등">
         <div class="pager"><div class="meta">질문 5 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
       </div>
 
       <!-- SMOKING -->
       <div class="question" data-step="5" id="step5">
-        <label class="block">흡연상태 <span class="small">(필수)</span></label>
+        <label class="block">흡연 상태 <span class="small">(필수)</span></label>
         <select id="smoke_status" onchange="updateSmokeDetails()">
           <option value="">선택</option><option value="never">비흡연</option><option value="former">과거 흡연</option><option value="current">현재 흡연</option>
         </select>
         <div id="smoke_details" style="margin-top:12px;display:none">
-          <label class="block">흡연 종류 (중복 선택 가능)</label>
+          <label class="block">흡연 종류(중복 선택 가능)</label>
           <div class="checkbox-row">
             <label class="checkbtn"><input type="checkbox" id="smoke_cig"> 일반담배(연초)</label>
             <label class="checkbtn"><input type="checkbox" id="smoke_elec"> 전자담배(액상/가열담배)</label>
@@ -236,7 +240,7 @@
           <label class="block">흡연 기간</label>
           <select id="smoke_duration"><option value="0">6개월 미만</option><option value="1">6개월~1년</option><option value="2">1년~3년</option><option value="3">3년~5년</option><option value="4">5년 이상</option></select>
 
-          <label class="block">일일 흡연량(또는 카트리지/병 수)</label>
+          <label class="block">일일 흡연량(또는 병 수)</label>
           <select id="smoke_amount"><option value="0">적음 (예:<5/일)</option><option value="1">보통 (5~15/일)</option><option value="2">많음 (16+/일)</option></select>
 
           <label class="block small">(과거 흡연자) 과거 평균 흡연량</label>
@@ -249,10 +253,10 @@
 
       <!-- ALCOHOL -->
       <div class="question" data-step="6" id="step6">
-        <label class="block">음주 빈도 (지난 1개월 기준) <span class="small">(필수)</span></label>
+        <label class="block">음주 빈도(지난 1개월 기준) <span class="small">(필수)</span></label>
         <select id="alcohol_freq" onchange="updateDrinkDetails()"><option value="0">전혀 마시지 않음</option><option value="1">월 1~3회</option><option value="2">주 1~2회</option><option value="3">주 3회 이상</option></select>
         <div id="drink_details" style="display:none;margin-top:10px">
-          <label class="block">한 번에 마시는 양 (소주 기준)</label>
+          <label class="block">한 번에 마시는 양(소주 기준)</label>
           <select id="alcohol_amount"><option value="0">1병 미만</option><option value="1">1~2병</option><option value="2">2병 이상</option></select>
           <label class="block">폭음(한 번에 과다 섭취) 경험(지난 1개월)</label>
           <select id="binge"><option value="0">없음</option><option value="1">1회</option><option value="2">2~3회</option><option value="3">4회 이상</option></select>
@@ -262,9 +266,9 @@
 
       <!-- PHYSICAL ACTIVITY -->
       <div class="question" data-step="7" id="step7">
-        <label class="block">주당 중등도 이상 신체활동(운동) 시간</label>
+        <label class="block">주당 격한 신체 활동(운동) 시간</label>
         <select id="physical_minutes"><option value="0">0분</option><option value="1">1~60분</option><option value="2">61~150분</option><option value="3">151분 이상</option></select>
-        <label class="block">주당 근력운동 횟수</label>
+        <label class="block">주당 근력 운동 횟수</label>
         <select id="strength_days"><option value="0">0회</option><option value="1">1회</option><option value="2">2회</option><option value="3">3회 이상</option></select>
         <div class="pager"><div class="meta">질문 8 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
       </div>
@@ -280,7 +284,7 @@
         <label class="block">채소/과일 섭취 횟수(하루)</label>
         <select id="veg_freq"><option value="0">거의 안 먹음</option><option value="1">1회 미만</option><option value="2">1~2회</option><option value="3">3회 이상</option></select>
 
-        <label class="block">정크/당 섭취 수준(주관적)</label>
+        <label class="block">당 섭취 수준(주관적)</label>
         <select id="sugar"><option value="3">거의 없음</option><option value="2">적당</option><option value="1">많음</option><option value="0">매우 많음</option></select>
 
         <div class="pager"><div class="meta">질문 9 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
@@ -291,34 +295,34 @@
         <label class="block">평균 수면시간 <span class="small">(필수)</span></label>
         <select id="sleep_hours"><option value="0">5시간 미만</option><option value="1">5~7시간</option><option value="2">7~9시간</option><option value="3">9시간 이상</option></select>
 
-        <label class="block">수면의 질 (주관적) <span class="small">(필수)</span></label>
-        <select id="sleep_quality"><option value="2">매우 좋음</option><option value="1">보통</option><option value="0">나쁨</option></select>
+        <label class="block">수면의 질(주관적) <span class="small">(필수)</span></label>
+        <select id="sleep_quality"><option value="2">좋음</option><option value="1">보통</option><option value="0">나쁨</option></select>
 
         <label class="block">최근 2주간 우울/스트레스 빈도 <span class="small">(필수)</span></label>
         <select id="mh_stress"><option value="2">거의 없음</option><option value="1">가끔</option><option value="0">자주</option></select>
 
-        <label class="block">기타 (선택) — 담당의에게 알릴 만한 증상</label>
+        <label class="block">기타(선택) — 담당의에게 알릴 만한 증상</label>
         <input type="text" id="mh_other" placeholder="예: 심한 불면, 식욕상실 등(선택)">
 
-        <div class="invalid-note" id="note-step9" style="display:none">수면·정신항목을 선택해주세요.</div>
+        <div class="invalid-note" id="note-step9" style="display:none">수면·정신 항목을 선택해주세요.</div>
         <div class="pager"><div class="meta">질문 10 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
       </div>
 
       <!-- PREVENTION / SCREENING -->
       <div class="question" data-step="10" id="step10">
-        <label class="block">최근 1년 내 정기검진 수검 여부</label>
+        <label class="block">최근 1년 내 정기검진 여부</label>
         <select id="screening"><option value="1">예</option><option value="0">아니오</option></select>
 
         <label class="block">건강보조제(비타민 등) 복용 중입니까?</label>
-        <select id="supplement" class="small"><option value="0">아니오</option><option value="1">예</option></select>
+        <select id="supplement" class="small"><option value="0">예</option><option value="1">아니오</option></select>
 
         <div class="pager"><div class="meta">질문 11 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
       </div>
 
       <!-- FINAL CONFIRM -->
       <div class="question" data-step="11" id="step11">
-        <label class="block">확인 후 요약 보기</label>
-        <div class="small">모든 문항을 확인하세요. 제출하면 요약을 보여드립니다.</div>
+        <label class="block">확인 후 결과 보기</label>
+        <div class="small">요약 보기를 누르시면 결과가 나옵니다.</div>
         <div class="pager"><div class="meta">최종 점검</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="computeAndShowSummary()">요약 보기</button></div></div>
       </div>
 
@@ -329,7 +333,7 @@
   <section id="summaryCard" class="card" style="display:none">
     <div class="row" style="align-items:center;justify-content:space-between">
       <div>
-        <div style="font-size:18px;font-weight:900;color:var(--navy)" id="summaryTitle">요약 — OOO님의 건강</div>
+        <div style="font-size:18px;font-weight:900;color:var(--navy)" id="summaryTitle">OOO님의 생활습관 진단</div>
         <div id="summaryText" class="small" style="margin-top:8px"></div>
       </div>
       <div style="text-align:right">
@@ -346,7 +350,7 @@
             <path d="M48 36 q12 -36 32 0 q20 -36 32 0" fill="#fff" stroke="#0b2340" stroke-width="1"/>
           </svg>
         </div>
-        <div class="mascotCaption" style="margin-top:10px">토끼가 결과에 따라 표정을 바꿉니다 🐰</div>
+        <div class="mascotCaption" style="margin-top:10px">야호 결과가 나왔어요~</div>
         <div style="margin-top:8px"><button class="btn no-print" id="viewReportBtn">자세히 보기</button>
           <button class="btn secondary no-print" onclick="startOver()">🔄 다시 하기</button></div>
       </div>
@@ -355,7 +359,7 @@
     <div style="margin-top:14px"><canvas id="summaryChart" width="600" height="260"></canvas></div>
 
     <div style="margin-top:12px" id="summaryItems"></div>
-    <footer class="footer-note">짧은 요약입니다 — 자세한 권고는 '자세히 보기'를 눌러 확인하세요.</footer>
+    <footer class="footer-note">자세한 권고는 상단의 '자세히 보기'를 눌러 확인하세요.</footer>
   </section>
 
   <!-- DETAILED REPORT -->
@@ -372,10 +376,10 @@
       </div>
     </div>
 
-    <div style="margin-top:12px" class="report-wrap"><canvas id="radarChart" width="600" height="300"></canvas></div>
+    <div style="margin-top:12px" class="report-wrap"><canvas id="radarChart" width="600" height="180"></canvas></div>
     <div id="detailList" style="margin-top:12px"></div>
     <div id="planSection" style="display:none;margin-top:12px" class="card">
-      <h3 style="margin:0 0 8px;color:var(--accent)">📋 개인 맞춤 개선 플랜 (추천 3개월)</h3>
+      <h3 style="margin:0 0 8px;color:var(--accent)">📋 개인 맞춤 개선 플랜(추천 3개월)</h3>
       <div id="planContent"></div>
     </div>
 
@@ -872,15 +876,24 @@ async function downloadPDF(){
   const pdf = new jsPDF('p','mm','a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const imgWidth = pageWidth - 20;
+  
+  // 🚀 여백을 20mm (10*2)에서 8mm (4*2)로 최소화
+  const margin = 4; // 4mm 여백
+  const marginTotal = margin * 2; // 8mm
+  
+  const imgWidth = pageWidth - marginTotal; 
   const imgHeight = canvas.height * imgWidth / canvas.width;
-  if(imgHeight <= pageHeight - 20){
-    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+  
+  // 🚀 여백 조정
+  if(imgHeight <= pageHeight - marginTotal){
+    pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
     pdf.save(`Health_Report_${new Date().toISOString().slice(0,10)}.pdf`);
     controls.forEach(c=>c.style.display='inline-block');
     return;
   }
-  const pageHeightPx = Math.floor(canvas.width * (pageHeight - 20) / imgWidth);
+  
+  // 🚀 슬라이싱 높이 계산 시 여백 조정
+  const pageHeightPx = Math.floor(canvas.width * (pageHeight - marginTotal) / imgWidth);
   let y = 0;
   while(y < canvas.height){
     const slice = document.createElement('canvas');
@@ -890,7 +903,9 @@ async function downloadPDF(){
     ctx.drawImage(canvas, 0, y, canvas.width, slice.height, 0, 0, canvas.width, slice.height);
     const sliceData = slice.toDataURL('image/png');
     const sliceImgHeight = slice.height * imgWidth / canvas.width;
-    pdf.addImage(sliceData, 'PNG', 10, 10, imgWidth, sliceImgHeight);
+    
+    // 🚀 PDF 이미지 추가 시 여백 조정
+    pdf.addImage(sliceData, 'PNG', margin, margin, imgWidth, sliceImgHeight);
     y += pageHeightPx;
     if(y < canvas.height) pdf.addPage();
   }
@@ -1084,20 +1099,76 @@ window.addEventListener("keydown", (e) => {
   if (e.shiftKey && e.key.toLowerCase() === "m") {
     e.preventDefault();
     const pw = prompt("관리자 비밀번호를 입력하세요:");
+    
     if (pw === ADMIN_PASS) {
-      if (confirm("⚠️ 모든 랭킹 및 히스토리를 초기화하시겠습니까?")) {
-        localStorage.removeItem("healthHistory");
-        localStorage.removeItem("leaderboard");
+      // 🚀 관리자 메뉴 선택
+      const action = prompt("관리자 모드입니다. 수행할 작업을 선택하세요:\n1. 모든 데이터 초기화\n2. 즉시 결과 보기 (점수 85점으로 가정)");
 
-        // ✅ 새로고침 없이 메시지 표시 및 화면 갱신
-        alert("✅ 모든 데이터가 초기화되었습니다.");
-        renderLeaderboard(); // 테이블 내용 즉시 갱신
+      if (action === '1') {
+        if (confirm("⚠️ 모든 랭킹 및 히스토리를 초기화하시겠습니까?")) {
+          localStorage.removeItem("healthHistory");
+          localStorage.removeItem("leaderboard");
+          alert("✅ 모든 데이터가 초기화되었습니다.");
+          renderLeaderboard(); // 테이블 내용 즉시 갱신
+          startOver(); // 첫 화면으로 돌아가기
+        }
+      } else if (action === '2') {
+        // 🚀 즉시 결과 생성 및 요약 페이지로 이동 로직
+        
+        // 1. 필요한 기본 데이터 생성 (이름: 관리자, 점수: 85점)
+        const mockScore = 85; 
+        lastResult = {
+          timestamp: Date.now(),
+          name: '관리자',
+          age: 40,
+          gender: 'male',
+          score: mockScore,
+          perItemScore: { bmi: 85, family: 70, history: 90, smoke: 95, drink: 80, exercise: 85, diet: 75, sleep: 80, stress: 90 },
+          r: {}, W: {}
+        };
+
+        // 2. 결과 렌더링 함수 호출
+        q('surveyCard').style.display = 'none';
+        q('summaryCard').style.display = 'block';
+        
+        q('summaryTitle').innerText = `요약 — 관리자 점검`;
+        q('summaryText').innerText = `양호 • 관리자 점검 결과 (총점: ${mockScore}/100)`;
+        
+        renderSummaryChart(lastResult.perItemScore);
+        renderSummaryItems(lastResult.perItemScore, lastResult.r);
+        updateMascot(mockScore);
+        
+        // 3. 상세보기 버튼 연결
+        q('viewReportBtn').onclick = () => { showDetailedReport(lastResult); };
+
+        // 🚀 4. "랭킹 보기" 버튼 수동 추가 로직 (누락된 부분 보완)
+        const btn = document.createElement('button');
+        btn.className = 'btn secondary';
+        btn.textContent = '🏆 랭킹 보기';
+        btn.style.marginTop = '12px';
+        btn.onclick = () => {
+          updateLeaderboard(lastResult.name, lastResult.score);
+          renderLeaderboard(lastResult.name, lastResult.score);
+          document.getElementById('summaryCard').style.display = 'none';
+          document.getElementById('rankingSection').style.display = 'block';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        q('summaryCard').appendChild(btn); // summaryCard의 가장 아래에 버튼 추가
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        alert("✅ 관리자 모드로 즉시 결과 페이지에 진입합니다.");
+
+      } else if (pw !== null) {
+// ... 나머지 코드는 동일 ...
+        alert("❌ 올바른 옵션을 선택하지 않았습니다.");
       }
+      
     } else if (pw !== null) {
       alert("❌ 비밀번호가 올바르지 않습니다.");
     }
   }
 });
+
 </script>
 </body>
 </html>
