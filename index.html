@@ -365,6 +365,7 @@
         <div id="reportSubtitle" class="small" style="margin-top:6px"></div>
       </div>
       <div style="text-align:right">
+        <button class="btn secondary no-print" onclick="backToSummary()">← 요약 보기</button>
         <button class="btn no-print" onclick="downloadPDF()">PDF 저장</button>
         <button class="btn secondary no-print" onclick="toggleHistory()">히스토리</button>
       </div>
@@ -1012,10 +1013,13 @@ computeAndShowSummary = function() {
 
 
 
-// 🧭 요약으로 돌아가기
+// 🧭 요약으로 돌아가기 (랭킹 또는 상세 리포트에서 요약 화면으로 돌아갈 때 사용)
 function backToSummary() {
   document.getElementById('rankingSection').style.display = 'none';
+  // 🚀 상세 리포트 카드도 숨깁니다.
+  document.getElementById('reportCard').style.display = 'none'; 
   document.getElementById('summaryCard').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' }); // 화면 상단으로 이동
 }
 
 /* ============================================================
