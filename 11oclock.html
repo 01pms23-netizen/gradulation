@@ -1,0 +1,1046 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>건강 위험도 자가진단 테스트</title>
+
+<!-- libs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css">
+
+<style>
+  :root{
+    --navy:#0b2340; --accent:#0f4c81; --card:#ffffffee; --muted:#6b7788;
+    --good:#1fbf7b; --warn:#f6c85f; --bad:#ef5350;
+    --maxw:980px; --glass: rgba(255,255,255,0.06);
+  }
+  *{box-sizing:border-box;font-family:"PretendardVariable","Noto Sans KR",system-ui,-apple-system}
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#071428,#0b2340);color:var(--navy)}
+  .app{max-width:980px;margin:28px auto;padding:18px;display:grid;gap:16px}
+  .card{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 12px 40px rgba(2,8,23,0.55)}
+  h1{margin:0 0 6px;color:var(--accent);font-size:20px}
+  p.lead{margin:0 0 12px;color:#445;font-size:14px}
+  label.block{display:block;margin:8px 0 6px;font-weight:700;color:var(--navy)}
+  input[type="text"], input[type="number"], select, textarea {width:100%;padding:10px;border-radius:8px;border:1px solid #d6def4;background:white;outline:none}
+  input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {box-shadow:0 6px 18px rgba(15,76,129,0.06);border-color:var(--accent)}
+  .row{display:flex;gap:12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .btn{background:linear-gradient(90deg,var(--accent),#235a9a);color:white;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:800}
+  .btn.secondary{background:#eef4fb;color:var(--navy);border:1px solid #d6e1f7}
+  .muted{color:var(--muted);font-size:13px}
+  .question{display:none}
+  .question.active{display:block}
+  .progress{height:10px;background:#eaf2ff;border-radius:8px;overflow:hidden;margin:12px 0}
+  .progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#235a9a);transition:width .32s}
+  .detail-card{background:#fbfeff;border:1px solid #e6efff;padding:12px;border-radius:10px;margin-bottom:12px}
+  canvas{max-width:100%;height:240px}
+  .small{font-size:13px;color:var(--muted)}
+  .checkbox-row{display:flex;gap:12px;flex-wrap:wrap}
+  .severity{display:inline-flex;gap:8px;align-items:center}
+  .history-panel{background:#fbfdff;border:1px dashed #d6e1f4;padding:12px;border-radius:10px}
+  .footer-note{font-size:12px;color:var(--muted);margin-top:10px}
+  .center{display:flex;justify-content:center;align-items:center}
+  @media(max-width:820px){.row{flex-direction:column}.grid2{grid-template-columns:1fr} .app{padding:12px}}
+
+  /* custom, borrowed-looking checkbox button */
+  .checkbtn{display:inline-flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:var(--glass);border:1px solid rgba(15,76,129,0.08);cursor:pointer;color:var(--navy);font-weight:700}
+  .checkbtn input{display:none}
+  .checkbtn.active{background:var(--accent);color:white;box-shadow:0 8px 24px rgba(11,36,64,0.18)}
+
+  /* mascot: updated, cuter flat style */
+  .mascot{width:82px;height:82px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(2,8,23,0.18)}
+  .mascot svg{width:64px;height:64px}
+  .mascotCaption{margin-top:10px;font-size:13px;color:var(--muted);text-align:center}
+
+  .pager{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:12px}
+  .meta{font-size:13px;color:var(--muted)}
+
+  /* validation styles */
+  .invalid { border-color:#ef6b6b !important; box-shadow:0 6px 18px rgba(239,107,107,0.08); animation: shake .36s; }
+  @keyframes shake { 0%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}100%{transform:translateX(0)} }
+
+  /* subtle helper for invalid message */
+  .invalid-note{color:#d14343;font-size:13px;margin-top:6px}
+
+  /* ensure cards are not split across pages for print */
+  @media print{
+    body{background:white}
+    .card{page-break-inside: avoid; -webkit-print-color-adjust: exact}
+    button, .pager, .no-print { display:none !important; }
+    .mascotCaption{display:none}
+    canvas{max-height:220px !important}
+  }
+  @page{ margin: 10mm; }
+
+  /* small responsive tweak for pdf slices */
+  .report-wrap{padding:8px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SURVEY CARD -->
+  <section class="card" id="surveyCard">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div>
+        <h1>🩺 건강 위험도 자가진단</h1>
+        <p class="lead">총 11문항 테스트 후 요약 및 상세 리포트를 제공합니다.</p>
+      </div>
+      <div style="text-align:right">
+        <div class="mascot" id="mascotSmall" title="건강 토끼">
+          <!-- UPDATED: cuter flat rabbit face -->
+          <svg id="mascotSmallSvg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="rabbit">
+            <rect width="64" height="64" rx="12" fill="#ffffff"/>
+            <!-- ears -->
+            <path d="M20 8 q6 -6 12 0" fill="#fff" stroke="#0b2340" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M44 8 q-6 -6 -12 0" fill="#fff" stroke="#0b2340" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- rounded face, friendly eyes -->
+            <ellipse cx="32" cy="38" rx="18" ry="14" fill="#fff" stroke="#0b2340" stroke-width="1.5"/>
+            <circle cx="26" cy="34" r="3.2" fill="#0b2340"/>
+            <circle cx="38" cy="34" r="3.2" fill="#0b2340"/>
+            <!-- blushing cheeks -->
+            <circle cx="22" cy="38" r="2.6" fill="#ffdede" opacity="0.9"/>
+            <circle cx="42" cy="38" r="2.6" fill="#ffdede" opacity="0.9"/>
+            <!-- gentle smile -->
+            <path id="bunnyMouth" d="M28 44 q4 4 8 0" stroke="#0b2340" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="mascotCaption" id="mascotCaption">토끼가 결과에 따라 표정을 바꿉니다 🐰</div>
+      </div>
+    </div>
+
+    <div class="progress"><i id="progressBar"></i></div>
+
+    <form id="surveyForm" onsubmit="return false">
+      <!-- IDENT -->
+      <div class="question active" data-step="0" id="step0">
+        <label class="block">이름 <span class="small" style="font-weight:600;color:var(--muted)">(필수)</span></label>
+        <input type="text" id="name" placeholder="예: 모이" />
+        <div class="invalid-note" id="note-step0" style="display:none">이름을 입력해주세요.</div>
+        <div class="pager"><div class="meta">질문 1 / 11</div><div style="text-align:right"><button class="btn no-print" type="button" onclick="nextStep()">시작 →</button></div></div>
+      </div>
+
+      <!-- DEMO -->
+      <div class="question" data-step="1" id="step1">
+        <div class="row">
+          <div style="flex:1"><label class="block">연령 (만) <span class="small">(필수)</span></label><input type="number" id="age" min="10" max="120" /></div>
+          <div style="width:160px"><label class="block">성별 <span class="small">(필수)</span></label><select id="gender"><option value="">선택</option><option value="male">남성</option><option value="female">여성</option><option value="na">밝히고 싶지 않음</option></select></div>
+        </div>
+        <div class="invalid-note" id="note-step1" style="display:none">연령과 성별을 모두 선택해주세요.</div>
+        <div class="pager"><div class="meta">질문 2 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
+
+      <!-- BMI -->
+      <div class="question" data-step="2" id="step2">
+        <div class="grid2"><div><label class="block">키 (cm) <span class="small">(필수)</span></label><input type="number" id="height" placeholder="예: 170"></div><div><label class="block">체중 (kg) <span class="small">(필수)</span></label><input type="number" id="weight" placeholder="예: 64"></div></div>
+        <p id="bmiText" class="muted" style="margin-top:8px"></p>
+        <div class="invalid-note" id="note-step2" style="display:none">키와 체중을 정확히 입력해주세요.</div>
+        <div class="pager"><div class="meta">질문 3 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="handleBMIandNext()">계산 후 다음</button></div></div>
+      </div>
+
+      <!-- FAMILY HISTORY -->
+      <div class="question" data-step="3" id="step3">
+        <label class="block">가족력 (직계 가족 — 복수 선택 가능)</label>
+        <div class="checkbox-row" id="familyRow">
+          <label class="checkbtn"><input type="checkbox" name="family" value="chd"> 관상동맥질환(심근경색) </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="stroke"> 뇌졸중 </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="hypertension"> 고혈압 </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="diabetes"> 제2형 당뇨병 </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="obesity"> 비만(중증) </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="hyperlipidemia"> 이상지질혈증(고지혈증) </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="colon_cancer"> 대장암 </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="breast_cancer"> 유방암 </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="gastric_cancer"> 위암 </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="liver_cancer"> 간암 </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="depression"> 우울증/정신건강질환 </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="autoimmune"> 자가면역질환(갑상선 포함) </label>
+          <label class="checkbtn"><input type="checkbox" name="family" value="none"> 해당 없음</label>
+        </div>
+        <label class="block">기타 (선택)</label><input type="text" id="family_other" placeholder="예: 특정 희귀질환 등">
+        <div class="pager"><div class="meta">질문 4 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
+
+      <!-- PERSONAL HISTORY -->
+      <div class="question" data-step="4" id="step4">
+        <label class="block">본인 병력(과거/현재) — 해당 시 체크 (복수 선택 가능). 각 항목에서 심각도를 선택하세요.</label>
+
+        <div style="margin-bottom:10px">
+          <label><input type="checkbox" name="history" value="diabetes"> 당뇨</label>
+          <span class="severity small">심각도:
+            <label class="small"><input type="checkbox" name="sev_diabetes" value="mild" onchange="onlyOne('sev_diabetes', this)"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_diabetes" value="mod" onchange="onlyOne('sev_diabetes', this)"> 중등도</label>
+            <label class="small"><input type="checkbox" name="sev_diabetes" value="severe" onchange="onlyOne('sev_diabetes', this)"> 중증</label>
+          </span>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label><input type="checkbox" name="history" value="hypertension"> 고혈압</label>
+          <span class="severity small">심각도:
+            <label class="small"><input type="checkbox" name="sev_hypertension" value="mild" onchange="onlyOne('sev_hypertension', this)"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_hypertension" value="mod" onchange="onlyOne('sev_hypertension', this)"> 중등도</label>
+            <label class="small"><input type="checkbox" name="sev_hypertension" value="severe" onchange="onlyOne('sev_hypertension', this)"> 중증</label>
+          </span>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label><input type="checkbox" name="history" value="dyslipidemia"> 고지혈증</label>
+          <span class="severity small">심각도:
+            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="mild" onchange="onlyOne('sev_dyslipidemia', this)"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="mod" onchange="onlyOne('sev_dyslipidemia', this)"> 중등도</label>
+            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="severe" onchange="onlyOne('sev_dyslipidemia', this)"> 중증</label>
+          </span>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label><input type="checkbox" name="history" value="cvd"> 심혈관질환(심근경색/뇌졸중)</label>
+          <span class="severity small">심각도:
+            <label class="small"><input type="checkbox" name="sev_cvd" value="mild" onchange="onlyOne('sev_cvd', this)"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_cvd" value="mod" onchange="onlyOne('sev_cvd', this)"> 중등도</label>
+            <label class="small"><input type="checkbox" name="sev_cvd" value="severe" onchange="onlyOne('sev_cvd', this)"> 중증</label>
+          </span>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label><input type="checkbox" name="history" value="cancer"> 암</label>
+          <span class="severity small">심각도:
+            <label class="small"><input type="checkbox" name="sev_cancer" value="mild" onchange="onlyOne('sev_cancer', this)"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_cancer" value="mod" onchange="onlyOne('sev_cancer', this)"> 중등도</label>
+            <label class="small"><input type="checkbox" name="sev_cancer" value="severe" onchange="onlyOne('sev_cancer', this)"> 중증</label>
+          </span>
+        </div>
+
+        <div style="margin-bottom:6px"><label><input type="checkbox" name="history" value="none"> 해당 없음</label></div>
+
+        <label class="block">기타 (선택)</label><input type="text" id="history_other" placeholder="예: 수술력, 만성질환 등">
+        <div class="pager"><div class="meta">질문 5 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
+
+      <!-- SMOKING -->
+      <div class="question" data-step="5" id="step5">
+        <label class="block">흡연상태 <span class="small">(필수)</span></label>
+        <select id="smoke_status" onchange="updateSmokeDetails()">
+          <option value="">선택</option><option value="never">비흡연</option><option value="former">과거 흡연</option><option value="current">현재 흡연</option>
+        </select>
+        <div id="smoke_details" style="margin-top:12px;display:none">
+          <label class="block">흡연 종류 (중복 선택 가능)</label>
+          <div class="checkbox-row">
+            <label class="checkbtn"><input type="checkbox" id="smoke_cig"> 일반담배(연초)</label>
+            <label class="checkbtn"><input type="checkbox" id="smoke_elec"> 전자담배(액상/가열담배)</label>
+            <label class="checkbtn"><input type="checkbox" id="smoke_huk"> 궐련형 전자담배</label>
+          </div>
+
+          <label class="block">흡연 기간</label>
+          <select id="smoke_duration"><option value="0">6개월 미만</option><option value="1">6개월~1년</option><option value="2">1년~3년</option><option value="3">3년~5년</option><option value="4">5년 이상</option></select>
+
+          <label class="block">일일 흡연량(또는 카트리지/병 수)</label>
+          <select id="smoke_amount"><option value="0">적음 (예:<5/일)</option><option value="1">보통 (5~15/일)</option><option value="2">많음 (16+/일)</option></select>
+
+          <label class="block small">(과거 흡연자) 과거 평균 흡연량</label>
+          <select id="smoke_past_amount"><option value="0">해당없음/기억안남</option><option value="1">적음</option><option value="2">보통</option><option value="3">많음</option></select>
+        </div>
+
+        <div class="invalid-note" id="note-step5" style="display:none">흡연 상태를 선택해주세요.</div>
+        <div class="pager"><div class="meta">질문 6 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
+
+      <!-- ALCOHOL -->
+      <div class="question" data-step="6" id="step6">
+        <label class="block">음주 빈도 (지난 1개월 기준) <span class="small">(필수)</span></label>
+        <select id="alcohol_freq" onchange="updateDrinkDetails()"><option value="0">전혀 마시지 않음</option><option value="1">월 1~3회</option><option value="2">주 1~2회</option><option value="3">주 3회 이상</option></select>
+        <div id="drink_details" style="display:none;margin-top:10px">
+          <label class="block">한 번에 마시는 양 (소주 기준)</label>
+          <select id="alcohol_amount"><option value="0">1병 미만</option><option value="1">1~2병</option><option value="2">2병 이상</option></select>
+          <label class="block">폭음(한 번에 과다 섭취) 경험(지난 1개월)</label>
+          <select id="binge"><option value="0">없음</option><option value="1">1회</option><option value="2">2~3회</option><option value="3">4회 이상</option></select>
+        </div>
+        <div class="pager"><div class="meta">질문 7 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
+
+      <!-- PHYSICAL ACTIVITY -->
+      <div class="question" data-step="7" id="step7">
+        <label class="block">주당 중등도 이상 신체활동(운동) 시간</label>
+        <select id="physical_minutes"><option value="0">0분</option><option value="1">1~60분</option><option value="2">61~150분</option><option value="3">151분 이상</option></select>
+        <label class="block">주당 근력운동 횟수</label>
+        <select id="strength_days"><option value="0">0회</option><option value="1">1회</option><option value="2">2회</option><option value="3">3회 이상</option></select>
+        <div class="pager"><div class="meta">질문 8 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
+
+      <!-- DIET DETAILS -->
+      <div class="question" data-step="8" id="step8">
+        <label class="block">물 섭취량(하루)</label>
+        <select id="water_intake"><option value="0">500ml 미만</option><option value="1">500ml~1L</option><option value="2">1~2L</option><option value="3">2L 이상</option></select>
+
+        <label class="block">가공식(인스턴트/패스트푸드) 주간 섭취 빈도</label>
+        <select id="instant_freq"><option value="3">거의 안 먹음</option><option value="2">주 1~2회</option><option value="1">주 3~4회</option><option value="0">주 5회 이상</option></select>
+
+        <label class="block">채소/과일 섭취 횟수(하루)</label>
+        <select id="veg_freq"><option value="0">거의 안 먹음</option><option value="1">1회 미만</option><option value="2">1~2회</option><option value="3">3회 이상</option></select>
+
+        <label class="block">정크/당 섭취 수준(주관적)</label>
+        <select id="sugar"><option value="3">거의 없음</option><option value="2">적당</option><option value="1">많음</option><option value="0">매우 많음</option></select>
+
+        <div class="pager"><div class="meta">질문 9 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
+
+      <!-- SLEEP & MENTAL -->
+      <div class="question" data-step="9" id="step9">
+        <label class="block">평균 수면시간 <span class="small">(필수)</span></label>
+        <select id="sleep_hours"><option value="0">5시간 미만</option><option value="1">5~7시간</option><option value="2">7~9시간</option><option value="3">9시간 이상</option></select>
+
+        <label class="block">수면의 질 (주관적) <span class="small">(필수)</span></label>
+        <select id="sleep_quality"><option value="2">매우 좋음</option><option value="1">보통</option><option value="0">나쁨</option></select>
+
+        <label class="block">최근 2주간 우울/스트레스 빈도 <span class="small">(필수)</span></label>
+        <select id="mh_stress"><option value="2">거의 없음</option><option value="1">가끔</option><option value="0">자주</option></select>
+
+        <label class="block">기타 (선택) — 담당의에게 알릴 만한 증상</label>
+        <input type="text" id="mh_other" placeholder="예: 심한 불면, 식욕상실 등(선택)">
+
+        <div class="invalid-note" id="note-step9" style="display:none">수면·정신항목을 선택해주세요.</div>
+        <div class="pager"><div class="meta">질문 10 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
+
+      <!-- PREVENTION / SCREENING -->
+      <div class="question" data-step="10" id="step10">
+        <label class="block">최근 1년 내 정기검진 수검 여부</label>
+        <select id="screening"><option value="1">예</option><option value="0">아니오</option></select>
+
+        <label class="block">건강보조제(비타민 등) 복용 중입니까?</label>
+        <select id="supplement" class="small"><option value="0">아니오</option><option value="1">예</option></select>
+
+        <div class="pager"><div class="meta">질문 11 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
+
+      <!-- FINAL CONFIRM -->
+      <div class="question" data-step="11" id="step11">
+        <label class="block">확인 후 요약 보기</label>
+        <div class="small">모든 문항을 확인하세요. 제출하면 요약을 보여드립니다.</div>
+        <div class="pager"><div class="meta">최종 점검</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="computeAndShowSummary()">요약 보기</button></div></div>
+      </div>
+
+    </form>
+  </section>
+
+  <!-- SUMMARY CARD -->
+  <section id="summaryCard" class="card" style="display:none">
+    <div class="row" style="align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:18px;font-weight:900;color:var(--navy)" id="summaryTitle">요약 — OOO님의 건강</div>
+        <div id="summaryText" class="small" style="margin-top:8px"></div>
+      </div>
+      <div style="text-align:right">
+        <div class="mascot" id="mascotLarge" style="width:92px;height:92px;border-radius:14px;background:#fff;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(2,8,23,0.18)">
+          <!-- larger cuter rabbit -->
+          <svg id="mascotLargeSvg" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="rabbit-large">
+            <rect width="128" height="128" rx="18" fill="#fff"/>
+            <ellipse cx="64" cy="78" rx="42" ry="32" fill="#fff" stroke="#0b2340" stroke-width="2"/>
+            <circle cx="52" cy="68" r="6.5" fill="#0b2340"/>
+            <circle cx="76" cy="68" r="6.5" fill="#0b2340"/>
+            <circle cx="44" cy="76" r="4.5" fill="#ffdede" opacity="0.95"/>
+            <circle cx="84" cy="76" r="4.5" fill="#ffdede" opacity="0.95"/>
+            <path id="bunnyLargeMouth" d="M56 92 q14 14 36 0" stroke="#0b2340" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M48 36 q12 -36 32 0 q20 -36 32 0" fill="#fff" stroke="#0b2340" stroke-width="1"/>
+          </svg>
+        </div>
+        <div class="mascotCaption" style="margin-top:10px">토끼가 결과에 따라 표정을 바꿉니다 🐰</div>
+        <div style="margin-top:8px"><button class="btn no-print" id="viewReportBtn">자세히 보기</button> <button class="btn secondary no-print" onclick="saveSummaryToHistory()">히스토리 저장</button></div>
+      </div>
+    </div>
+
+    <div style="margin-top:14px"><canvas id="summaryChart" width="600" height="260"></canvas></div>
+
+    <div style="margin-top:12px" id="summaryItems"></div>
+    <footer class="footer-note">짧은 요약입니다 — 자세한 권고는 '자세히 보기'를 눌러 확인하세요.</footer>
+  </section>
+
+  <!-- DETAILED REPORT -->
+  <section id="reportCard" class="card" style="display:none">
+    <div class="row" style="align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:18px;font-weight:900;color:var(--navy)" id="reportTitle">상세 리포트</div>
+        <div id="reportSubtitle" class="small" style="margin-top:6px"></div>
+      </div>
+      <div style="text-align:right">
+        <button class="btn no-print" onclick="downloadPDF()">PDF 저장</button>
+        <button class="btn secondary no-print" onclick="toggleHistory()">히스토리</button>
+      </div>
+    </div>
+
+    <div style="margin-top:12px" class="report-wrap"><canvas id="radarChart" width="600" height="300"></canvas></div>
+    <div id="detailList" style="margin-top:12px"></div>
+    <div id="planSection" style="display:none;margin-top:12px" class="card">
+      <h3 style="margin:0 0 8px;color:var(--accent)">📋 개인 맞춤 개선 플랜 (추천 3개월)</h3>
+      <div id="planContent"></div>
+    </div>
+
+    <div id="historyPanel" class="history-panel" style="display:none;margin-top:12px">
+      <h4 style="margin:0 0 8px;color:var(--accent)">🕘 저장된 히스토리</h4>
+      <div id="historyList"></div>
+      <div style="margin-top:8px;text-align:right"><button class="btn secondary no-print" onclick="clearHistory()">모두 삭제</button></div>
+    </div>
+
+    <footer class="footer-note">
+      출처 요약: WHO / CDC / KDCA / Framingham / 대한비만학회 외 주요 메타분석 논문들. 이 도구는 진단을 대체하지 않습니다.
+    </footer>
+  </section>
+
+</div>
+
+<script>
+/* ====== Pager control + validation + enter-key navigation ====== */
+const steps = Array.from(document.querySelectorAll('.question'));
+const progressBar = document.getElementById('progressBar');
+let stepIndex = 0;
+function refreshProgress(){ const pct = Math.round(((stepIndex+1)/steps.length)*100); progressBar.style.width = pct + '%'; }
+function showStep(i){ steps.forEach((s,idx)=> s.classList.toggle('active', idx===i)); stepIndex=i; refreshProgress(); window.scrollTo({top:0,behavior:'smooth'}); }
+showStep(0);
+
+/* Required fields per step (IDs) */
+const requiredFields = {
+  0: ['name'],
+  1: ['age','gender'],
+  2: ['height','weight'],
+  5: ['smoke_status'],
+  6: ['alcohol_freq'],
+  9: ['sleep_hours','sleep_quality','mh_stress'],
+};
+
+/* utility */
+function q(id){ return document.getElementById(id); }
+function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
+
+/* clear invalid visuals */
+function clearInvalidForStep(i){
+  const note = q(`note-step${i}`);
+  if(note) note.style.display='none';
+  const step = steps[i];
+  if(!step) return;
+  const inputs = step.querySelectorAll('input,select,textarea');
+  inputs.forEach(inp=> inp.classList.remove('invalid'));
+}
+
+/* validate current step before moving on. returns true if ok */
+function validateStep(i){
+  clearInvalidForStep(i);
+  const req = requiredFields[i];
+  if(!req) return true;
+  let ok = true;
+  req.forEach(id=>{
+    const el = q(id);
+    if(!el) return;
+    const val = (el.value || '').toString().trim();
+    const isEmpty = (val === '' || val === 'null');
+    if(isEmpty){
+      ok = false;
+      el.classList.add('invalid');
+    } else {
+      // additional numeric checks
+      if(id === 'age'){
+        const n = Number(val);
+        if(isNaN(n) || n < 10 || n > 120){ ok = false; el.classList.add('invalid'); }
+      }
+      if(id === 'height' || id === 'weight'){
+        const n = Number(val);
+        if(isNaN(n) || n <= 0){ ok = false; el.classList.add('invalid'); }
+      }
+    }
+  });
+  if(!ok){
+    const note = q(`note-step${i}`);
+    if(note) note.style.display='block';
+    return false;
+  }
+  return true;
+}
+
+function nextStep(){
+  // validate current
+  if(!validateStep(stepIndex)) return;
+  if(stepIndex < steps.length-1) showStep(stepIndex+1);
+}
+function prevStep(){ if(stepIndex > 0) showStep(stepIndex-1); }
+
+/* handle ENTER key navigation - Enter -> next (except textareas where Shift+Enter allowed) */
+function setupEnterNavigation(){
+  const interactive = document.querySelectorAll('input, select, textarea');
+  interactive.forEach(el=>{
+    el.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){
+        // textarea allow Shift+Enter for newline
+        if(el.tagName.toLowerCase() === 'textarea' && e.shiftKey) return;
+        e.preventDefault();
+        // if current element belongs to a step, validate that step
+        nextStep();
+      }
+    });
+  });
+}
+setupEnterNavigation();
+
+/* custom checkbtn toggles */
+document.querySelectorAll('.checkbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const inp = btn.querySelector('input');
+    if(!inp) return;
+    inp.checked = !inp.checked;
+    btn.classList.toggle('active', inp.checked);
+    // family 'none' exclusive behavior
+    if(inp.name==='family'){
+      if(inp.value==='none' && inp.checked){
+        document.querySelectorAll('input[name="family"]').forEach(i=>{
+          if(i.value!=='none'){ i.checked=false; if(i.closest('.checkbtn')) i.closest('.checkbtn').classList.remove('active'); }
+        });
+      } else if(inp.value!=='none' && inp.checked){
+        const none = document.querySelector('input[name="family"][value="none"]');
+        if(none){ none.checked=false; if(none.closest('.checkbtn')) none.closest('.checkbtn').classList.remove('active'); }
+      }
+    }
+  });
+});
+
+/* onlyOne severity */
+function onlyOne(name, checkbox){ const all = document.querySelectorAll(`input[name="${name}"]`); all.forEach(cb=>{ if(cb!==checkbox) cb.checked=false; }); }
+
+/* dynamic show/hide smoking & drinking details */
+function updateSmokeDetails(){ const st=document.getElementById('smoke_status').value; document.getElementById('smoke_details').style.display=(st==='former'||st==='current')?'block':'none'; }
+function updateDrinkDetails(){ const f=Number(document.getElementById('alcohol_freq').value||0); document.getElementById('drink_details').style.display=(f>0)?'block':'none'; }
+
+/* BMI calc */
+function handleBMIandNext(){ const h=Number(document.getElementById('height').value), w=Number(document.getElementById('weight').value); if(!h||!w){ // show invalid
+    q('height').classList.add('invalid'); q('weight').classList.add('invalid'); q('note-step2').style.display='block'; return; } const bmi = +(w/((h/100)**2)); document.getElementById('bmiText').innerText=`계산된 BMI: ${bmi.toFixed(1)} (${bmiCategory(bmi)})`; // clear any invalids
+  q('height').classList.remove('invalid'); q('weight').classList.remove('invalid'); q('note-step2').style.display='none'; nextStep(); }
+function bmiCategory(bmi){ if(bmi<18.5) return '저체중'; if(bmi<23) return '정상'; if(bmi<25) return '과체중'; if(bmi<30) return '비만'; return '고도비만'; }
+
+/* ====== Risk calculation (evidence-aligned weights) ====== */
+/* weights consistent with prior design; family weights adjusted by evidence-based risk multipliers */
+const W = { bmi:0.11, family:0.12, history:0.13, smoke:0.16, drink:0.09, exercise:0.10, diet:0.15, sleep:0.07, stress:0.07 };
+
+/* compute summary */
+let lastResult = null;
+function computeAndShowSummary(){
+  // final validation of all required steps before computing
+  for(const si of Object.keys(requiredFields)){
+    if(!validateStep(Number(si))){
+      showStep(Number(si)); return;
+    }
+  }
+
+  const name = (q('name').value || '익명').trim();
+  const age = Number(q('age').value) || null;
+  const gender = q('gender').value || null;
+
+  const r = {};
+  r.bmi = computeBMIRisk();
+  r.family = computeFamilyRisk(); // 0..1
+  r.history = computeHistoryRisk();
+  r.smoke = computeSmokingRisk();
+  r.drink = computeAlcoholRisk();
+  r.exercise = computeExerciseRisk();
+  r.diet = computeDietRisk();
+  r.sleep = computeSleepRisk();
+  r.stress = computeStressRisk();
+
+  let weighted = 0; for(const k in W) weighted += (W[k]||0)*(r[k]||0);
+  let score = Math.round((1-weighted)*100); score=Math.max(10,Math.min(100,score)); // floor 10
+
+  const perItemScore = {}; for(const k in r) perItemScore[k]=Math.round((1-r[k])*100);
+
+  // label
+  let shortLabel='', shortText='';
+  if(score>=90){ shortLabel='매우 양호'; shortText=`${name}님, 전반적으로 양호합니다. 현재 습관을 유지하세요.`; }
+  else if(score>=75){ shortLabel='양호'; shortText=`${name}님, 대체로 양호합니다. 일부 항목 개선 권장.`; }
+  else if(score>=50){ shortLabel='주의'; shortText=`${name}님, 생활습관 개선이 필요합니다.`; }
+  else { shortLabel='고위험'; shortText=`${name}님, 위험 수준입니다. 전문가 상담을 권장합니다.`; }
+
+  lastResult = { timestamp: Date.now(), name, age, gender, score, perItemScore, r, W };
+
+  // persist last result for quick restore
+  try{ localStorage.setItem('lastResult', JSON.stringify(lastResult)); }catch(e){ console.warn('localStorage fail',e); }
+
+  // render summary
+  q('summaryTitle').innerText = `요약 — ${name}님의 건강`;
+  q('summaryText').innerText = `${shortLabel} • ${shortText} (총점: ${score}/100)`;
+  renderSummaryChart(perItemScore);
+  renderSummaryItems(perItemScore, r);
+  updateMascot(score);
+
+  // wire detail
+  q('viewReportBtn').onclick = ()=>{ showDetailedReport(lastResult); };
+
+  q('surveyCard').style.display='none';
+  q('summaryCard').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ========== risk functions (with clearer units + documented approximations) ========== */
+
+function computeBMIRisk(){
+  const h=Number(q('height').value), w=Number(q('weight').value);
+  if(!h||!w) return 0;
+  const bmi = w/((h/100)**2);
+  if(bmi<18.5) return 0.12;
+  if(bmi<23) return 0;
+  if(bmi<25) return 0.25;
+  if(bmi<30) return 0.55;
+  return 0.85;
+}
+function computeFamilyRisk(){
+  const boxes = Array.from(document.querySelectorAll('input[name="family"]'));
+  const checked = boxes.filter(b=>b.checked).map(b=>b.value);
+  if(checked.length===0) return 0;
+  if(checked.includes('none')) return 0;
+  let s=0;
+  if(checked.includes('chd')) s+=0.28;
+  if(checked.includes('stroke')) s+=0.18;
+  if(checked.includes('hypertension')) s+=0.12;
+  if(checked.includes('hyperlipidemia')) s+=0.10;
+  if(checked.includes('diabetes')) s+=0.25;
+  if(checked.includes('obesity')) s+=0.12;
+  if(checked.includes('colon_cancer')) s+=0.10;
+  if(checked.includes('breast_cancer')) s+=0.12;
+  if(checked.includes('gastric_cancer')) s+=0.08;
+  if(checked.includes('liver_cancer')) s+=0.08;
+  if(checked.includes('depression')) s+=0.06;
+  if(checked.includes('autoimmune')) s+=0.06;
+  return Math.min(0.92, s);
+}
+function computeHistoryRisk(){
+  const boxes = Array.from(document.querySelectorAll('input[name="history"]'));
+  const checked = boxes.filter(b=>b.checked).map(b=>b.value);
+  if(checked.length===0) return 0;
+  if(checked.includes('none')) return 0;
+  let s=0;
+  function sev(name){
+    const nodes = document.querySelectorAll(`input[name="${name}"]`);
+    let val = 0;
+    nodes.forEach(cb=>{ if(cb.checked){ val = cb.value==='mild'?0.6:(cb.value==='mod'?0.8:1.0); }});
+    return val;
+  }
+  if(checked.includes('cvd')) s+=0.5 * (0.5 + 0.5*sev('sev_cvd'));
+  if(checked.includes('diabetes')) s+=0.45 * (0.5 + 0.5*sev('sev_diabetes'));
+  if(checked.includes('hypertension')) s+=0.3 * (0.5 + 0.5*sev('sev_hypertension'));
+  if(checked.includes('dyslipidemia')) s+=0.25 * (0.5 + 0.5*sev('sev_dyslipidemia'));
+  if(checked.includes('cancer')) s+=0.35 * (0.5 + 0.5*sev('sev_cancer'));
+  return Math.min(1, s);
+}
+function computeSmokingRisk(){
+  const st=q('smoke_status').value;
+  if(!st||st==='never') return 0;
+  const cig=q('smoke_cig')?.checked;
+  const elec=q('smoke_elec')?.checked;
+  const huk=q('smoke_huk')?.checked;
+  const dur=Number(q('smoke_duration')?.value||0);
+  const amt=Number(q('smoke_amount')?.value||0);
+  const past=Number(q('smoke_past_amount')?.value||0);
+  if(st==='former') return Math.min(0.6, 0.05 + past*0.12);
+  const durYears = [0.25,0.75,2,4,7][dur] || 0;
+  const cigs = [3,10,20][amt] || 0;
+  const packYears = (cigs/20) * durYears;
+  let base = 0.2 + Math.tanh(packYears/10)*0.6;
+  let typeFactor = 0.9;
+  if(cig) typeFactor = 1.0;
+  else if(elec) typeFactor = 0.75;
+  if(huk) typeFactor = Math.max(typeFactor,0.85);
+  return Math.min(1, base * typeFactor);
+}
+function computeAlcoholRisk(){
+  const freq = Number(q('alcohol_freq')?.value||0);
+  const amt = Number(q('alcohol_amount')?.value||0);
+  const binge = Number(q('binge')?.value||0);
+  if(freq===0) return 0;
+  const occPerWeek = [0, 0.25, 1.5, 4][freq];
+  const bottles = [0.5, 1.5, 2.5][amt] || 0.5;
+  const weeklyEthanol = occPerWeek * bottles * 63;
+  const normalized = Math.min(1, weeklyEthanol / 140);
+  const bingeFactor = Math.min(1, binge/3);
+  const risk = 0.55 * normalized + 0.25 * bingeFactor;
+  return Math.min(0.92, risk);
+}
+function computeExerciseRisk(){
+  const mins = Number(q('physical_minutes')?.value||0);
+  const strength = Number(q('strength_days')?.value||0);
+  if(mins>=3 && strength>=2) return 0;
+  if(mins>=2) return 0.10;
+  if(mins>=1) return 0.25;
+  return 0.55;
+}
+function computeDietRisk(){
+  const w = Number(q('water_intake')?.value||0);
+  const i = Number(q('instant_freq')?.value||0);
+  const v = Number(q('veg_freq')?.value||0);
+  const s = Number(q('sugar')?.value||0);
+  const waterRisk = (3-w)/3;
+  const instantRisk = (3-i)/3;
+  const vegRisk = (3-v)/3;
+  const sugarRisk = (3-s)/3;
+  const risk = 0.35*instantRisk + 0.25*vegRisk + 0.2*sugarRisk + 0.2*waterRisk;
+  return Math.min(1, risk);
+}
+function computeSleepRisk(){
+  const hr = Number(q('sleep_hours')?.value||0);
+  const qv = Number(q('sleep_quality')?.value||0);
+  if(hr===2 && qv===2) return 0;
+  let base = (hr===1?0.13:(hr===0?0.35:0.13));
+  const qual = (qv===2?0:(qv===1?0.12:0.30));
+  return Math.min(1, base + qual);
+}
+function computeStressRisk(){
+  const s = Number(q('mh_stress')?.value||0);
+  return (2-s)/2;
+}
+
+/* ===== Summary rendering (charts) ===== */
+let summaryChart = null;
+function renderSummaryChart(perItemScore){
+  const labels = ['BMI','가족력','병력','흡연','음주','운동','식습관','수면','정신건강'];
+  const data = [ perItemScore.bmi, perItemScore.family, perItemScore.history, perItemScore.smoke, perItemScore.drink, perItemScore.exercise, perItemScore.diet, perItemScore.sleep, perItemScore.stress ];
+  const ctx = document.getElementById('summaryChart').getContext('2d');
+  if(summaryChart) summaryChart.destroy();
+  summaryChart = new Chart(ctx, {
+    type:'radar',
+    data:{ labels, datasets:[{ label:'요약 점수', data, backgroundColor:'rgba(15,76,129,0.16)', borderColor:'#0f4c81', pointBackgroundColor:'#154a7a' }]},
+    options:{ scales:{r:{min:0,max:100,ticks:{stepSize:20},grid:{color:'#eef6ff'}}}, plugins:{legend:{display:false}} }
+  });
+}
+function renderSummaryItems(perItemScore, r){
+  const container = document.getElementById('summaryItems'); container.innerHTML = '';
+  const shortMap = { bmi: 'BMI', family:'가족력', history:'기저질환', smoke:'흡연', drink:'음주', exercise:'운동', diet:'식습관', sleep:'수면', stress:'정신건강' };
+  for(const k in perItemScore){
+    const score = perItemScore[k];
+    const el = document.createElement('div'); el.style.display='flex'; el.style.justifyContent='space-between'; el.style.alignItems='center'; el.style.padding='8px 6px'; el.style.borderBottom='1px solid #f1f6fb';
+    el.innerHTML = `<div style="font-weight:700">${shortMap[k]||k}</div><div>${score} / 100</div>`;
+    container.appendChild(el);
+  }
+}
+
+/* ========== Detailed report ========== */
+let radarChart = null;
+function showDetailedReport(result){
+  document.getElementById('summaryCard').style.display='none';
+  document.getElementById('reportCard').style.display='block';
+  document.getElementById('reportTitle').innerText = `${result.name}님의 상세 리포트`;
+  document.getElementById('reportSubtitle').innerText = `생성일: ${new Date(result.timestamp).toLocaleString()} • 총점: ${result.score}/100`;
+
+  const perItemScore = result.perItemScore;
+  const labels = ['BMI','가족력','병력','흡연','음주','운동','식습관','수면','정신건강'];
+  const data = [perItemScore.bmi, perItemScore.family, perItemScore.history, perItemScore.smoke, perItemScore.drink, perItemScore.exercise, perItemScore.diet, perItemScore.sleep, perItemScore.stress];
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  if(radarChart) radarChart.destroy();
+  radarChart = new Chart(ctx, { type:'radar', data:{ labels, datasets:[{ label:'항목별 점수', data, backgroundColor:'rgba(15,76,129,0.16)', borderColor:'#0f4c81', pointBackgroundColor:'#154a7a' }]}, options:{ scales:{r:{min:0,max:100,ticks:{stepSize:20}}}, plugins:{legend:{display:false}} } });
+
+  renderDetails(result.perItemScore, result.r, {name:result.name, age:result.age, gender:result.gender});
+  generatePlan(result.perItemScore, result.r, {name:result.name, age:result.age, gender:result.gender});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* render details & plan */
+function renderDetails(perItemScore, r, ctxInfo){
+  const container = document.getElementById('detailList'); container.innerHTML = '';
+  function card(title,score,risk,advice,note=''){
+    const wrapper = document.createElement('div'); wrapper.className='detail-card'; wrapper.style.borderLeft=`4px solid ${determineColor(score)}`;
+    wrapper.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><strong style="color:var(--navy)">${title}</strong><span style="font-weight:800">${score} / 100</span></div><div style="height:8px;background:#eef6ff;border-radius:6px;margin:8px 0;overflow:hidden"><div style="width:${score}%;height:100%;background:linear-gradient(90deg,#0f4c81,#0b2340)"></div></div><div style="color:#445">${advice}</div>${note?`<div style="margin-top:8px;font-size:13px;color:var(--muted)">${note}</div>`:''}`;
+    container.appendChild(wrapper);
+  }
+  let bmiAdvice = '';
+  if(r.bmi === 0) bmiAdvice = 'BMI 정상 범주입니다. 규칙적 식사·운동을 유지하세요.';
+  else if(r.bmi <= 0.25) bmiAdvice = '과체중 초기: 식단 조절 및 활동량 증대 권장.';
+  else if(r.bmi <= 0.55) bmiAdvice = '비만 범주: 체중 5~10% 감량 목표 권장.';
+  else bmiAdvice = '고위험(고도비만): 전문의 상담 권장.';
+  card('체질량지수 (BMI)', perItemScore.bmi, r.bmi, bmiAdvice, '근거: 아시아 BMI 컷오프 (KDCA/대한비만학회).');
+
+  card('가족력', perItemScore.family, r.family, r.family===0?'가족력 없음. 일반 검진 권장.':'가족력 존재: 조기검진 고려 및 위험요인 관리 권장.');
+
+  card('기저질환', perItemScore.history, r.history, r.history===0?'기저질환 없음.':'기저질환 존재: 지속적인 치료·추적 필요.');
+
+  const smStatus = q('smoke_status').value;
+  let smokeAdvice = '';
+  if(smStatus===''||smStatus==='never') smokeAdvice='비흡연 상태입니다. 간접흡연 회피 권장.';
+  else if(smStatus==='former') smokeAdvice='과거 흡연력 있음: 금연 유지 및 검진 권장.';
+  else smokeAdvice='현재 흡연자: 금연이 가장 강력한 위험감소 수단입니다.';
+  card('흡연(일반/전자)', perItemScore.smoke, r.smoke, smokeAdvice, '근거: WHO/CDC — 전자담배도 폐·심혈관 영향 보고.');
+
+  const af = Number(q('alcohol_freq')?.value||0);
+  let drinkAdvice = af===0?'음주 없음':'절주 권장: 주간 음주량 감축 시 위험 감소.';
+  card('음주', perItemScore.drink, r.drink, drinkAdvice);
+
+  const exv = Number(q('physical_minutes')?.value||0);
+  const exAdvice = exv>=3?'운동량 양호: 현재 루틴 유지.':'운동량 증가 권장: 주 150분 중등도 목표.';
+  card('신체활동', perItemScore.exercise, r.exercise, exAdvice, '근거: WHO 신체활동 권고.');
+
+  card('식습관', perItemScore.diet, r.diet, '채소·과일 섭취 증가, 가공식·당류 제한 권장.');
+
+  card('수면', perItemScore.sleep, r.sleep, r.sleep===0?'수면 양호':'수면 위생 개선 권장 (취침 루틴, 전자기기 제한).');
+
+  const stv = Number(q('mh_stress')?.value||2);
+  card('정신건강', perItemScore.stress, r.stress, stv===2?'스트레스 양호':'정기적 스트레스 관리 권장.');
+}
+
+function determineColor(score){
+  if(score>=80) return getComputedStyle(document.documentElement).getPropertyValue('--good')||'#1fbf7b';
+  if(score>=60) return getComputedStyle(document.documentElement).getPropertyValue('--warn')||'#f6c85f';
+  return getComputedStyle(document.documentElement).getPropertyValue('--bad')||'#ef5350';
+}
+
+/* plan generator */
+function generatePlan(perItemScore, r, ctxInfo){
+  document.getElementById('planSection').style.display='block';
+  const content = document.getElementById('planContent'); content.innerHTML='';
+  function add(title, bullets, note=''){
+    const el=document.createElement('div'); el.style.marginBottom='10px';
+    const h=document.createElement('div'); h.style.fontWeight='800'; h.style.color='var(--accent)'; h.textContent=title; el.appendChild(h);
+    const ul=document.createElement('ul'); ul.style.margin='6px 0 0 18px';
+    bullets.forEach(b=>{ const li=document.createElement('li'); li.style.marginBottom='6px'; li.textContent=b; ul.appendChild(li); });
+    el.appendChild(ul);
+    if(note){ const n=document.createElement('div'); n.className='small'; n.style.marginTop='6px'; n.textContent=note; el.appendChild(n); }
+    content.appendChild(el);
+  }
+
+  if(r.bmi > 0.25) add('체중관리(3개월 목표)', ['목표: 체중 3~5% 감량(첫 3개월)', '식이: 하루 300kcal 감량 목표, 설탕·가공식 제한', '운동: 주 150분 유산소 + 주 2회 근력'], '근거: 체중 5% 감량의 대사개선 효과 보고');
+  else add('체중관리', ['현재 BMI 양호: 균형식·규칙적 운동 유지']);
+
+  if(r.smoke > 0.2) add('금연 플랜', ['금연일 설정', '니코틴 대체요법/클리닉 활용', '대체행동(물, 껌, 심호흡) 적용', '재발 시 전문상담'], '근거: 금연 시 심혈관·암 위험 감소');
+  else add('흡연', ['비흡연 유지']);
+
+  if(r.drink > 0.2) add('절주 플랜', ['주 2일 이상 금주 수립', '음주 유발 환경 관리', '음주일지 기록'], '근거: 누적 음주량 감소 시 간·심혈관 위험 개선');
+  else add('음주', ['절주 유지']);
+
+  if(r.exercise > 0.1) add('운동 증진', ['주 150분 중등도 또는 75분 고강도', '근력운동 주 2회', '일상 활동(계단, 걷기) 증가'], '근거: WHO 신체활동 권고');
+  else add('운동', ['루틴 유지, 부족 시 점진적 증가']);
+
+  if(r.diet > 0.2) add('식습관 개선', ['채소·과일 하루 3회 이상', '가공식 최소화', '당류 음료 대체(물·무가당 차)'], '근거: 가공식·당류 감소는 대사 개선에 유효');
+  else add('식습관', ['양호 — 유지']);
+
+  if(r.sleep > 0.12) add('수면 개선', ['취침/기상 시간 고정', '취침 1시간 전 스크린 제한', '카페인 섭취 오후 제한'], '근거: 수면 위생 개선은 수면 질 향상에 유효');
+  else add('수면', ['양호 — 유지']);
+
+  if(r.stress > 0.15) add('스트레스 관리', ['매일 10분 마음챙김/호흡', '주당 2~3회 경도 운동', '지속 시 전문 상담'], '근거: 정신건강 중재는 전반적 위험 감소에 도움');
+  else add('정신건강', ['양호 — 유지']);
+}
+
+/* ===== History (localStorage): save lastResult + archive ===== */
+function saveSummaryToHistory(){
+  if(!lastResult) return alert('먼저 요약을 생성하세요.');
+  const hist = JSON.parse(localStorage.getItem('healthHistory')||'[]');
+  hist.push(lastResult);
+  try{ localStorage.setItem('healthHistory', JSON.stringify(hist)); localStorage.setItem('lastResult', JSON.stringify(lastResult)); }
+  catch(e){ console.warn('LocalStorage save error', e); alert('로컬 저장 실패: 브라우저 설정을 확인하세요.'); return; }
+  alert('요약 결과가 히스토리에 저장되었습니다.');
+}
+function toggleHistory(){
+  const panel = document.getElementById('historyPanel');
+  panel.style.display = (panel.style.display==='none' || panel.style.display==='') ? 'block' : 'none';
+  if(panel.style.display==='block') renderHistory();
+}
+function renderHistory(){
+  const list = document.getElementById('historyList'); list.innerHTML='';
+  const hist = JSON.parse(localStorage.getItem('healthHistory')||'[]').slice().reverse();
+  if(hist.length===0){ list.innerHTML='<div class="small">저장된 기록이 없습니다.</div>'; return; }
+  hist.forEach((h,idx)=>{
+    const row = document.createElement('div'); row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.padding='8px 6px'; row.style.borderBottom='1px solid #f1f6fb';
+    const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:700">${h.name||'익명'}</div><div class="small">${new Date(h.timestamp).toLocaleString()}</div><div class="small">총점: ${h.score}</div>`;
+    const right = document.createElement('div');
+    const loadBtn = document.createElement('button'); loadBtn.className='btn secondary no-print'; loadBtn.style.marginRight='8px'; loadBtn.textContent='불러오기';
+    loadBtn.onclick = ()=>{ showDetailedReport(h); };
+    const delBtn = document.createElement('button'); delBtn.className='btn secondary no-print'; delBtn.textContent='삭제';
+    delBtn.onclick = ()=>{ if(confirm('이 기록을 삭제하시겠습니까?')){ removeHistoryEntry(hist.length-1-idx); } };
+    right.appendChild(loadBtn); right.appendChild(delBtn);
+    row.appendChild(left); row.appendChild(right); list.appendChild(row);
+  });
+}
+function removeHistoryEntry(index){ const all = JSON.parse(localStorage.getItem('healthHistory')||'[]'); all.splice(index,1); localStorage.setItem('healthHistory', JSON.stringify(all)); renderHistory(); }
+function clearHistory(){ if(!confirm('히스토리를 모두 삭제하시겠습니까?')) return; localStorage.removeItem('healthHistory'); renderHistory(); }
+
+/* ===== PDF: fix clipping via canvas slicing (improved handling) ===== */
+async function downloadPDF(){
+  const el = document.getElementById('reportCard');
+  // hide non-printable controls
+  const controls = document.querySelectorAll('.no-print'); controls.forEach(c=>c.style.display='none');
+
+  // ensure report is fully expanded (history/plan visible)
+  document.getElementById('planSection').style.display='block';
+
+  const scale = 2;
+  const canvas = await html2canvas(el, {scale:scale, useCORS:true, windowWidth:document.documentElement.scrollWidth, windowHeight:document.documentElement.scrollHeight});
+  const imgData = canvas.toDataURL('image/png');
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p','mm','a4');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const imgWidth = pageWidth - 20;
+  const imgHeight = canvas.height * imgWidth / canvas.width;
+  if(imgHeight <= pageHeight - 20){
+    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+    pdf.save(`Health_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+    controls.forEach(c=>c.style.display='inline-block');
+    return;
+  }
+  const pageHeightPx = Math.floor(canvas.width * (pageHeight - 20) / imgWidth);
+  let y = 0;
+  while(y < canvas.height){
+    const slice = document.createElement('canvas');
+    slice.width = canvas.width;
+    slice.height = Math.min(pageHeightPx, canvas.height - y);
+    const ctx = slice.getContext('2d');
+    ctx.drawImage(canvas, 0, y, canvas.width, slice.height, 0, 0, canvas.width, slice.height);
+    const sliceData = slice.toDataURL('image/png');
+    const sliceImgHeight = slice.height * imgWidth / canvas.width;
+    pdf.addImage(sliceData, 'PNG', 10, 10, imgWidth, sliceImgHeight);
+    y += pageHeightPx;
+    if(y < canvas.height) pdf.addPage();
+  }
+  pdf.save(`Health_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+  controls.forEach(c=>c.style.display='inline-block');
+}
+
+/* Mascot update (flat mouth shapes) */
+function updateMascot(score){
+  const smallMouth = document.getElementById('bunnyMouth');
+  const largeMouth = document.getElementById('bunnyLargeMouth');
+  const mascotBg = document.getElementById('mascotSmall');
+  if(!smallMouth || !largeMouth) return;
+  if(score>=75){
+    smallMouth.setAttribute('d','M28 44 q4 6 8 0'); // smile
+    largeMouth.setAttribute('d','M56 92 q14 14 36 0');
+    mascotBg.style.background = '#ffffff';
+  } else if(score>=50){
+    smallMouth.setAttribute('d','M28 44 q4 2 8 0'); // neutral
+    largeMouth.setAttribute('d','M56 92 q14 6 36 0');
+    mascotBg.style.background = '#fffbe6';
+  } else {
+    smallMouth.setAttribute('d','M28 46 q4 -4 8 0'); // worried
+    largeMouth.setAttribute('d','M56 92 q14 -6 36 0');
+    mascotBg.style.background = '#fff0f0';
+  }
+}
+
+/* init: read last result existence (do not auto-show) */
+(function init(){
+  try{
+    const last = JSON.parse(localStorage.getItem('lastResult')||'null');
+    if(last) { /* available via history */ }
+  }catch(e){}
+})();
+
+
+/* ============================================================
+  ✅ (추가 기능 2) 참여자 랭킹 (Leaderboard) + 관리자 기능 + PDF 수정
+   ============================================================ */
+
+// 📌 랭킹 섹션 동적 추가
+const rankingSection = document.createElement('section');
+rankingSection.id = 'rankingSection';
+rankingSection.className = 'card';
+rankingSection.style.display = 'none';
+rankingSection.innerHTML = `
+  <h2>🏆 건강 습관 랭킹</h2>
+  <p class="small">저장된 참여자들의 건강 점수를 비교해보세요.</p>
+  <table style="width:100%;border-collapse:collapse;margin-top:10px">
+    <thead>
+      <tr style="background:#f3f7fe;color:var(--navy)">
+        <th>순위</th><th>이름</th><th>점수</th><th>날짜</th>
+      </tr>
+    </thead>
+    <tbody id="rankingBody"></tbody>
+  </table>
+  <div style="text-align:right;margin-top:14px">
+    <button class="btn secondary" onclick="backToSummary()">← 요약으로 돌아가기</button>
+  </div>
+`;
+document.querySelector('.app').appendChild(rankingSection);
+
+// 🧠 랭킹 데이터 관리
+function updateLeaderboard(name, score) {
+  const data = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+  data.push({ name, score, time: new Date().toISOString() });
+  data.sort((a, b) => b.score - a.score); // 점수 내림차순
+  const trimmed = data.slice(0, 10); // 상위 10명만 유지
+  localStorage.setItem('leaderboard', JSON.stringify(trimmed));
+  return trimmed;
+}
+
+
+// 🖥️ 랭킹 렌더링
+function renderLeaderboard(currentName, currentScore) {
+  const tbody = document.getElementById('rankingBody');
+  const data = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+  if (!tbody) return;
+  tbody.innerHTML = data.length
+    ? data.map((p, i) => `
+        <tr ${p.name === currentName && p.score === currentScore ? 'style="background:#e8f3ff;font-weight:700;color:var(--accent)"' : ''}>
+          <td>${i + 1}</td>
+          <td>${p.name}</td>
+          <td>${p.score}</td>
+          <td>${new Date(p.time).toLocaleDateString()}</td>
+        </tr>
+      `).join('')
+    : `<tr><td colspan="4" style="text-align:center;padding:10px;">저장된 데이터가 없습니다.</td></tr>`;
+}
+
+
+// 🧾 요약 생성 후 “랭킹 보기” 버튼 추가
+const originalCompute = computeAndShowSummary;
+computeAndShowSummary = function() {
+  originalCompute(); // 기존 기능 실행
+
+  // [1] '히스토리 저장' 버튼 제거 (ID가 달라도 텍스트 기준으로 탐색)
+  const buttons = document.querySelectorAll('#summaryCard button');
+  buttons.forEach(btn => {
+    if (btn.textContent.includes('히스토리 저장')) btn.remove();
+  });
+
+  // [2] 랭킹 보기 버튼 추가 (중복 방지)
+  if (!document.getElementById('rankBtn')) {
+    const btn = document.createElement('button');
+    btn.id = 'rankBtn';
+    btn.className = 'btn secondary';
+    btn.textContent = '🏆 랭킹 보기';
+    btn.style.marginTop = '12px';
+    btn.onclick = () => {
+      updateLeaderboard(lastResult.name, lastResult.score);
+      renderLeaderboard(lastResult.name, lastResult.score);
+      document.getElementById('summaryCard').style.display = 'none';
+      document.getElementById('rankingSection').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    document.getElementById('summaryCard').appendChild(btn);
+  }
+};
+
+
+
+// 🧭 요약으로 돌아가기
+function backToSummary() {
+  document.getElementById('rankingSection').style.display = 'none';
+  document.getElementById('summaryCard').style.display = 'block';
+}
+
+/* ============================================================
+  🔐 관리자 모드 간편 초기화 (버튼 없음, 랭킹창 유지)
+   ============================================================ */
+const ADMIN_PASS = "초기화";
+
+window.addEventListener("keydown", (e) => {
+  if (e.shiftKey && e.key.toLowerCase() === "m") {
+    e.preventDefault();
+    const pw = prompt("관리자 비밀번호를 입력하세요:");
+    if (pw === ADMIN_PASS) {
+      if (confirm("⚠️ 모든 랭킹 및 히스토리를 초기화하시겠습니까?")) {
+        localStorage.removeItem("healthHistory");
+        localStorage.removeItem("leaderboard");
+
+        // ✅ 새로고침 없이 메시지 표시 및 화면 갱신
+        alert("✅ 모든 데이터가 초기화되었습니다.");
+        renderLeaderboard(); // 테이블 내용 즉시 갱신
+      }
+    } else if (pw !== null) {
+      alert("❌ 비밀번호가 올바르지 않습니다.");
+    }
+  }
+});
+</script>
+</body>
+</html>
