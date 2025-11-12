@@ -190,7 +190,7 @@
       <!-- DEMO -->
       <div class="question" data-step="1" id="step1">
         <div class="row">
-          <div style="flex:1"><label class="block">연령(만) <span class="small">(필수)</span></label><input type="number" id="age" min="10" max="120" /></div>
+          <div style="flex:1"><label class="block">연령(만) <span class="small">(필수)</span></label><input type="number" id="age" min="1" max="150" /></div>
           <div style="width:160px"><label class="block">성별 <span class="small">(필수)</span></label><select id="gender"><option value="">선택</option><option value="male">남성</option><option value="female">여성</option><option value="na">밝히고 싶지 않음</option></select></div>
         </div>
         <div class="invalid-note" id="note-step1" style="display:none">연령과 성별을 모두 선택해주세요.</div>
@@ -204,79 +204,113 @@
         <div class="invalid-note" id="note-step2" style="display:none">키와 체중을 정확히 입력해주세요.</div>
         <div class="pager"><div class="meta">질문 3 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="handleBMIandNext()">계산 후 다음</button></div></div>
       </div>
+      
+      <!-- Family History -->
+<div class="question" data-step="3" id="step3">
+        
+        <label class="block">가족력(직계 가족 - 해당 시 체크)</label>
+        
+        <div id="familyRow" style="margin-bottom: 15px;">
+          
+          <div style="margin-bottom:10px">
+            <label><input type="checkbox" name="family" value="cardio_metabolic_group" 
+                          onclick="handleGroupSelect(this, ['family_sub_chd', 'family_sub_stroke', 'family_sub_hypertension', 'family_sub_hyperlipidemia']); handleFamilyExclusion(this);"> 
+              심혈관/대사 질환</label>
+            <span class="severity small" style="margin-left: 15px;">세부 항목:
+              <label class="small"><input type="checkbox" name="family_sub_chd" value="chd" onchange="this.closest('#familyRow').querySelector('input[value=\'cardio_metabolic_group\']').checked=this.checked; handleFamilyExclusion(this);"> 관상동맥질환</label>
+              <label class="small"><input type="checkbox" name="family_sub_stroke" value="stroke" onchange="this.closest('#familyRow').querySelector('input[value=\'cardio_metabolic_group\']').checked=this.checked; handleFamilyExclusion(this);"> 뇌졸중</label>
+              <label class="small"><input type="checkbox" name="family_sub_hypertension" value="hypertension" onchange="this.closest('#familyRow').querySelector('input[value=\'cardio_metabolic_group\']').checked=this.checked; handleFamilyExclusion(this);"> 고혈압</label>
+              <label class="small"><input type="checkbox" name="family_sub_hyperlipidemia" value="hyperlipidemia" onchange="this.closest('#familyRow').querySelector('input[value=\'cardio_metabolic_group\']').checked=this.checked; handleFamilyExclusion(this);"> 이상지질혈증</label>
+            </span>
+          </div>
 
-      <!-- FAMILY HISTORY -->
-      <div class="question" data-step="3" id="step3">
-        <label class="block">가족력(직계 가족 - 복수 선택 가능)</label>
-        <div class="checkbox-row" id="familyRow">
-          <label class="checkbtn"><input type="checkbox" name="family" value="chd"> 관상동맥질환(심근경색) </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="stroke"> 뇌졸중 </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="hypertension"> 고혈압 </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="diabetes"> 제2형 당뇨병 </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="obesity"> 비만(중증) </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="hyperlipidemia"> 이상지질혈증(고지혈증) </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="colon_cancer"> 대장암 </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="breast_cancer"> 유방암 </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="gastric_cancer"> 위암 </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="liver_cancer"> 간암 </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="depression"> 우울증/정신건강질환 </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="autoimmune"> 자가면역질환(갑상선 포함) </label>
-          <label class="checkbtn"><input type="checkbox" name="family" value="none"> 해당 없음</label>
+          <div style="margin-bottom:10px">
+            <label><input type="checkbox" name="family" value="diabetes" onchange="handleFamilyExclusion(this)"> 제2형 당뇨병</label>
+          </div>
+
+          <div style="margin-bottom:10px">
+            <label><input type="checkbox" name="family" value="cancer_group" 
+                          onclick="handleGroupSelect(this, ['family_sub_colon', 'family_sub_breast', 'family_sub_gastric', 'family_sub_liver']); handleFamilyExclusion(this);"> 
+              암 </label>
+            <span class="severity small" style="margin-left: 15px;">세부 항목:
+              <label class="small"><input type="checkbox" name="family_sub_colon" value="colon_cancer" onchange="this.closest('#familyRow').querySelector('input[value=\'cancer_group\']').checked=this.checked; handleFamilyExclusion(this);"> 대장암</label>
+              <label class="small"><input type="checkbox" name="family_sub_breast" value="breast_cancer" onchange="this.closest('#familyRow').querySelector('input[value=\'cancer_group\']').checked=this.checked; handleFamilyExclusion(this);"> 유방암</label>
+              <label class="small"><input type="checkbox" name="family_sub_gastric" value="gastric_cancer" onchange="this.closest('#familyRow').querySelector('input[value=\'cancer_group\']').checked=this.checked; handleFamilyExclusion(this);"> 위암</label>
+              <label class="small"><input type="checkbox" name="family_sub_liver" value="liver_cancer" onchange="this.closest('#familyRow').querySelector('input[value=\'cancer_group\']').checked=this.checked; handleFamilyExclusion(this);"> 간암</label>
+            </span>
+          </div>
+
+          <div style="margin-bottom:10px">
+            <label><input type="checkbox" name="family" value="other_group" 
+                          onclick="handleGroupSelect(this, ['family_sub_obesity', 'family_sub_depression', 'family_sub_autoimmune']); handleFamilyExclusion(this);"> 
+              기타 질환</label>
+            <span class="severity small" style="margin-left: 15px;">세부 항목:
+              <label class="small"><input type="checkbox" name="family_sub_obesity" value="obesity" onchange="this.closest('#familyRow').querySelector('input[value=\'other_group\']').checked=this.checked; handleFamilyExclusion(this);"> 중증 비만</label>
+              <label class="small"><input type="checkbox" name="family_sub_depression" value="depression" onchange="this.closest('#familyRow').querySelector('input[value=\'other_group\']').checked=this.checked; handleFamilyExclusion(this);"> 우울증/정신건강질환</label>
+              <label class="small"><input type="checkbox" name="family_sub_autoimmune" value="autoimmune" onchange="this.closest('#familyRow').querySelector('input[value=\'other_group\']').checked=this.checked; handleFamilyExclusion(this);"> 자가면역질환</label>
+            </span>
+          </div>
+
+          <div style="margin-top: 12px;">
+            <label><input type="checkbox" name="family" value="none" onchange="handleFamilyExclusion(this)"> 해당 없음</label>
+          </div>
         </div>
+        
         <label class="block">기타(선택)</label><input type="text" id="family_other" placeholder="예: 특정 희귀질환 등">
+        
         <div class="pager"><div class="meta">질문 4 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
       </div>
 
-      <!-- PERSONAL HISTORY -->
+        <!-- PERSONAL HISTORY -->
       <div class="question" data-step="4" id="step4">
         <label class="block">본인 병력(과거/현재) - 해당 시 체크 (복수 선택 가능). 해당할 경우 항목에서 심각도를 선택하세요.</label>
 
         <div style="margin-bottom:10px">
-          <label><input type="checkbox" name="history" value="diabetes"> 당뇨</label>
+          <label><input type="checkbox" name="history" value="diabetes" onchange="handleHistoryExclusion(this)"> 당뇨</label>
           <span class="severity small">심각도:
-            <label class="small"><input type="checkbox" name="sev_diabetes" value="mild" onchange="onlyOne('sev_diabetes', this)"> 경증</label>
-            <label class="small"><input type="checkbox" name="sev_diabetes" value="mod" onchange="onlyOne('sev_diabetes', this)"> 중등도</label>
-            <label class="small"><input type="checkbox" name="sev_diabetes" value="severe" onchange="onlyOne('sev_diabetes', this)"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_diabetes" value="mild" onchange="onlyOne('sev_diabetes', this); handleHistoryExclusion(this);"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_diabetes" value="mod" onchange="onlyOne('sev_diabetes', this); handleHistoryExclusion(this);"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_diabetes" value="severe" onchange="onlyOne('sev_diabetes', this); handleHistoryExclusion(this);"> 심각</label>
           </span>
         </div>
 
         <div style="margin-bottom:10px">
-          <label><input type="checkbox" name="history" value="hypertension"> 고혈압</label>
+          <label><input type="checkbox" name="history" value="hypertension" onchange="handleHistoryExclusion(this)"> 고혈압</label>
           <span class="severity small">심각도:
-            <label class="small"><input type="checkbox" name="sev_hypertension" value="mild" onchange="onlyOne('sev_hypertension', this)"> 경증</label>
-            <label class="small"><input type="checkbox" name="sev_hypertension" value="mod" onchange="onlyOne('sev_hypertension', this)"> 중등도</label>
-            <label class="small"><input type="checkbox" name="sev_hypertension" value="severe" onchange="onlyOne('sev_hypertension', this)"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_hypertension" value="mild" onchange="onlyOne('sev_hypertension', this); handleHistoryExclusion(this);"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_hypertension" value="mod" onchange="onlyOne('sev_hypertension', this); handleHistoryExclusion(this);"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_hypertension" value="severe" onchange="onlyOne('sev_hypertension', this); handleHistoryExclusion(this);"> 심각</label>
           </span>
         </div>
 
         <div style="margin-bottom:10px">
-          <label><input type="checkbox" name="history" value="dyslipidemia"> 고지혈증</label>
+          <label><input type="checkbox" name="history" value="dyslipidemia" onchange="handleHistoryExclusion(this)"> 고지혈증</label>
           <span class="severity small">심각도:
-            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="mild" onchange="onlyOne('sev_dyslipidemia', this)"> 경증</label>
-            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="mod" onchange="onlyOne('sev_dyslipidemia', this)"> 중등도</label>
-            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="severe" onchange="onlyOne('sev_dyslipidemia', this)"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="mild" onchange="onlyOne('sev_dyslipidemia', this); handleHistoryExclusion(this);"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="mod" onchange="onlyOne('sev_dyslipidemia', this); handleHistoryExclusion(this);"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="severe" onchange="onlyOne('sev_dyslipidemia', this); handleHistoryExclusion(this);"> 심각</label>
           </span>
         </div>
 
         <div style="margin-bottom:10px">
-          <label><input type="checkbox" name="history" value="cvd"> 심혈관질환(심근경색/뇌졸중)</label>
+          <label><input type="checkbox" name="history" value="cvd" onchange="handleHistoryExclusion(this)"> 심혈관질환(심근경색/뇌졸중)</label>
           <span class="severity small">심각도:
-            <label class="small"><input type="checkbox" name="sev_cvd" value="mild" onchange="onlyOne('sev_cvd', this)"> 경증</label>
-            <label class="small"><input type="checkbox" name="sev_cvd" value="mod" onchange="onlyOne('sev_cvd', this)"> 중등도</label>
-            <label class="small"><input type="checkbox" name="sev_cvd" value="severe" onchange="onlyOne('sev_cvd', this)"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_cvd" value="mild" onchange="onlyOne('sev_cvd', this); handleHistoryExclusion(this);"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_cvd" value="mod" onchange="onlyOne('sev_cvd', this); handleHistoryExclusion(this);"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_cvd" value="severe" onchange="onlyOne('sev_cvd', this); handleHistoryExclusion(this);"> 심각</label>
           </span>
         </div>
 
         <div style="margin-bottom:10px">
-          <label><input type="checkbox" name="history" value="cancer"> 암</label>
+          <label><input type="checkbox" name="history" value="cancer" onchange="handleHistoryExclusion(this)"> 암</label>
           <span class="severity small">심각도:
-            <label class="small"><input type="checkbox" name="sev_cancer" value="mild" onchange="onlyOne('sev_cancer', this)"> 경증</label>
-            <label class="small"><input type="checkbox" name="sev_cancer" value="mod" onchange="onlyOne('sev_cancer', this)"> 중등도</label>
-            <label class="small"><input type="checkbox" name="sev_cancer" value="severe" onchange="onlyOne('sev_cancer', this)"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_cancer" value="mild" onchange="onlyOne('sev_cancer', this); handleHistoryExclusion(this);"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_cancer" value="mod" onchange="onlyOne('sev_cancer', this); handleHistoryExclusion(this);"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_cancer" value="severe" onchange="onlyOne('sev_cancer', this); handleHistoryExclusion(this);"> 심각</label>
           </span>
         </div>
 
-        <div style="margin-bottom:6px"><label><input type="checkbox" name="history" value="none"> 해당 없음</label></div>
+        <div style="margin-bottom:6px"><label><input type="checkbox" name="history" value="none" onchange="handleHistoryExclusion(this)"> 해당 없음</label></div>
 
         <label class="block">기타(선택)</label><input type="text" id="history_other" placeholder="예: 수술력, 만성질환 등">
         <div class="pager"><div class="meta">질문 5 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
@@ -434,9 +468,11 @@
         <button class="btn secondary no-print" onclick="startOver()" style="margin-left: 8px;">🔄 다시 하기</button>
       </div>
     </div>
-
-    <div style="margin-top:12px" class="report-wrap"><canvas id="radarChart" width="600" height="180"></canvas></div>
-    <div id="detailList" style="margin-top:12px"></div>
+    
+    <div style="margin-top:12px" class="report-wrap">
+        <canvas id="radarChart" width="600" height="160"></canvas>
+    </div>
+    5<div id="detailList" style="margin-top:12px"></div>
     <div id="planSection" style="display:none;margin-top:12px" class="card">
       <h3 style="margin:0 0 8px;color:var(--accent)">📋 개인 맞춤 개선 플랜(추천 3개월)</h3>
       <div id="planContent"></div>
@@ -506,7 +542,7 @@ function validateStep(i){
       // additional numeric checks
       if(id === 'age'){
         const n = Number(val);
-        if(isNaN(n) || n < 10 || n > 120){ ok = false; el.classList.add('invalid'); }
+        if(isNaN(n) || n < 1 || n > 151){ ok = false; el.classList.add('invalid'); }
       }
       if(id === 'height' || id === 'weight'){
         const n = Number(val);
@@ -568,7 +604,29 @@ document.querySelectorAll('.checkbtn').forEach(btn=>{
 });
 
 /* onlyOne severity */
-function onlyOne(name, checkbox){ const all = document.querySelectorAll(`input[name="${name}"]`); all.forEach(cb=>{ if(cb!==checkbox) cb.checked=false; }); }
+function onlyOne(name, checkbox){ 
+  const all = document.querySelectorAll(`input[name="${name}"]`); 
+  const isChecked = checkbox.checked; // 현재 선택한 심각도 체크박스의 상태 (true/false)
+
+  // 1. 같은 그룹 내 다른 심각도 체크박스 해제 (기존 onlyOne 기능)
+  all.forEach(cb=>{ 
+    if(cb!==checkbox) cb.checked=false; 
+  }); 
+
+  // 2. 🚀 [추가된 로직] 해당 병력(history) 체크박스를 자동으로 선택합니다.
+  
+  // 'sev_diabetes'에서 'diabetes'만 추출
+  const historyName = name.replace('sev_', ''); 
+  // 해당 병력 체크박스 (name="history", value="diabetes" 등) 찾기
+  const historyCheckbox = document.querySelector(`input[name="history"][value="${historyName}"]`);
+
+  if(historyCheckbox){
+      // 심각도 옵션이 선택되었다면, 병명 체크박스도 선택합니다.
+      // (onlyOne 로직 덕분에 심각도가 해제될 때는 이 함수가 실행되지 않으므로, 
+      //  단순히 현재 상태(isChecked)를 따라가게 설정하면 됩니다.)
+      historyCheckbox.checked = isChecked;
+  }
+}
 
 /* dynamic show/hide smoking & drinking details */
 function updateSmokeDetails(){ const st=document.getElementById('smoke_status').value; document.getElementById('smoke_details').style.display=(st==='former'||st==='current')?'block':'none'; }
@@ -922,10 +980,15 @@ function clearHistory(){ if(!confirm('히스토리를 모두 삭제하시겠습�
 /* ===== PDF: fix clipping via canvas slicing (improved handling) ===== */
 async function downloadPDF(){
   const el = document.getElementById('reportCard');
+  // 🚀 [추가] 히스토리 패널은 PDF에 불필요하므로 잠시 숨깁니다.
+  const historyPanel = document.getElementById('historyPanel');
+  const historyPanelOriginalDisplay = historyPanel.style.display;
+  historyPanel.style.display = 'none';
+  
   // hide non-printable controls
   const controls = document.querySelectorAll('.no-print'); controls.forEach(c=>c.style.display='none');
 
-  // ensure report is fully expanded (history/plan visible)
+  // ensure report is fully expanded (plan visible)
   document.getElementById('planSection').style.display='block';
 
   const scale = 2;
@@ -935,10 +998,9 @@ async function downloadPDF(){
   const pdf = new jsPDF('p','mm','a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  
-  // 🚀 여백을 20mm (10*2)에서 8mm (4*2)로 최소화
-  const margin = 4; // 4mm 여백
-  const marginTotal = margin * 2; // 8mm
+  // 🚀 여백을 0으로 완전 제거합니다.
+  const margin = 0; // 0mm 여백
+  const marginTotal = margin * 2; // 0mm
   
   const imgWidth = pageWidth - marginTotal; 
   const imgHeight = canvas.height * imgWidth / canvas.width;
@@ -1107,11 +1169,21 @@ computeAndShowSummary = function() {
 
  // [2] 랭킹 보기 버튼 추가 (중복 방지)
   let btn = document.getElementById('rankBtn');
-  // ... (버튼 생성 로직 생략) ...
+  
+  // ⭐️ [복구된 코드] 버튼이 없으면 새로 생성하고 요약 카드에 추가합니다.
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'rankBtn'; 
+    btn.className = 'btn secondary';
+    btn.textContent = '🏆 랭킹 보기';
+    btn.style.marginTop = '12px';
+    
+    // 버튼을 summaryCard의 가장 아래에 추가
+    document.getElementById('summaryCard').appendChild(btn); 
+  }
   
   // ⭐️ 랭킹 보기 버튼의 onclick 로직은 이제 저장 없이 화면 전환만 담당합니다.
   btn.onclick = () => {
-    // ... (이전과 동일한 화면 전환 및 텍스트 설정 로직) ...
     isFromSummary = true; 
     const rbtn = document.getElementById('rankingReturnBtn');
     if (rbtn) {
@@ -1127,7 +1199,6 @@ computeAndShowSummary = function() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 };
-
 let isFromSummary = false; // 현재 랭킹 화면으로 진입한 경로를 추적하는 플래그
 
 /* 🏆 랭킹 화면에서 복귀 (경로에 따라 분기) */
@@ -1339,6 +1410,54 @@ window.addEventListener("keydown", (e) => {
   } 
   // ⭐️ 이 자리는 window.addEventListener("keydown", ...)의 닫는 괄호와 세미콜론입니다.
 });
+
+/* 🚀 본인 병력의 '해당 없음' 선택 시 모든 항목 초기화 (완벽 초기화 버전) */
+function handleHistoryExclusion(checkbox) {
+  // 본인 병력 섹션 (data-step="4") 컨테이너를 명확히 찾습니다.
+  const historyContainer = document.querySelector('[data-step="4"]');
+  if (!historyContainer) return;
+
+  // ⭐️ [핵심 수정] 컨테이너 내부의 모든 체크박스를 찾습니다 (병명과 심각도 모두 포함).
+  const allCheckboxes = historyContainer.querySelectorAll('input[type="checkbox"]');
+  
+  if (checkbox.value === 'none' && checkbox.checked) {
+    // '해당 없음'을 선택하면, 해당 없음 자신을 제외한 모든 체크박스 해제
+    allCheckboxes.forEach(cb => {
+      if (cb.value !== 'none') {
+        cb.checked = false;
+      }
+    });
+  } else if (checkbox.value !== 'none' && checkbox.checked) {
+    // 다른 항목을 선택하면, '해당 없음' 해제
+    const noneCheckbox = historyContainer.querySelector('input[name="history"][value="none"]');
+    if (noneCheckbox) {
+      noneCheckbox.checked = false;
+    }
+  }
+}
+
+
+/* 가족력의 '해당 없음' 선택 시 다른 항목 자동 해제 (완벽 초기화 버전) */
+function handleFamilyExclusion(checkbox) {
+  // 🚀 모든 체크박스를 찾는 범위: familyRow 내부의 모든 체크박스
+  const allFamilyCheckboxes = document.querySelectorAll('#familyRow input[type="checkbox"]');
+  
+  if (checkbox.value === 'none' && checkbox.checked) {
+    // '해당 없음'을 선택하면, 모든 체크박스 해제
+    allFamilyCheckboxes.forEach(cb => {
+      // '해당 없음' 자신을 제외하고 모두 해제
+      if (cb.value !== 'none') {
+        cb.checked = false;
+      }
+    });
+  } else if (checkbox.value !== 'none' && checkbox.checked) {
+    // 다른 항목을 선택하면, '해당 없음' 해제
+    const noneCheckbox = document.querySelector('input[name="family"][value="none"]');
+    if (noneCheckbox) {
+      noneCheckbox.checked = false;
+    }
+  }
+}
 
 </script>
 </body>
