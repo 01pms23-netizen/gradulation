@@ -65,44 +65,18 @@
 
   .invalid-note{color:#d14343;font-size:13px;margin-top:6px}
 
-/* 2. 태블릿 / iPad slide mode */
-  @media (min-width: 768px) and (max-width: 1366px) {
-    .app{height:100vh; margin:0 auto; max-width:1024px; padding:18px 24px;}
-    .card{height:calc(100vh - 56px); display:flex; flex-direction:column; overflow:hidden;}
-    #surveyForm {display: flex; flex-direction: column; flex: 1 1 auto; 
-        overflow: hidden; 
-        height: 100%; 
-    }
-    .slides { 
-        display:flex; 
-        flex:1 1 auto; 
-        transition:transform .45s ease; 
-        width: 100%; 
-        overflow:hidden; 
-        height: 100%; 
-    }
-    .question:not(.active) {
-      display: none !important;
-  }
-    
-    .question{ 
-        display:block; 
-        flex:0 0 100%; 
-        width: 100%; 
-        height: 100%; 
-        padding:18px 12px; 
-        overflow-y:auto; 
-        -webkit-overflow-scrolling: touch; 
-        min-height: 0; 
-    }
-    
+  /* tablet / iPad slide mode */
+  @media (min-width: 768px) and (max-width: 1365px) {
+    .app{height:100vh; margin:0 auto; max-width:980px}
+    .card{height:calc(100vh - 56px); display:flex; flex-direction:column;}
+    .slides { display:flex; flex:1 1 auto; transition:transform .45s ease; width:100%; overflow:hidden }
+    .question{ display:block; flex:0 0 100%; padding:18px 12px; overflow:auto }
     .headerRow{display:flex;align-items:center;gap:12px}
     .headerRow .mascot{order:0}
     .headerRow .titleWrap{flex:1}
     .card > .progress{margin:8px 0}
-    
-    .question .pager{position:sticky;bottom:0px;background:var(--card);padding:10px;margin:0 -12px; border-top:1px solid #eee; z-index:10;}
-    .question:first-child .pager{bottom:0} 
+    /* make pager buttons sticky bottom of slide for consistent placement */
+    .question .pager{position:sticky;bottom:8px;background:transparent;padding-top:8px}
   }
 
   @media print{
@@ -147,7 +121,7 @@ select.small option { color: #0b2340 !important; }        /* option 내부 텍�
 
     <div class="progress"><i id="progressBar"></i></div>
 
-    <form id="surveyForm" onsubmit="return false">
+    <form id="surveyForm" onsubmit="return false" style="height:100%">
       <div class="slides" id="slidesWrapper">
 
         <!-- STEP 0 -->
@@ -464,15 +438,11 @@ function refreshProgress(){ const pct = Math.round(((stepIndex+1)/steps.length)*
 function isSlideMode(){ return window.innerWidth >= 768 && window.innerWidth <= 1365; }
 
 function showStep(i){
-  if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
-  steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
-  stepIndex=i; refreshProgress();
-  if(isSlideMode() && slidesWrapper){ 
-    slidesWrapper.style.transform = `translateX(-${i*100}%)`; 
-  } else {
-    // iPad 세로형이 아닌 데스크톱 모드일 때, display: block/none을 사용하여 전환 보장
-    steps.forEach((s,idx)=> s.style.display = (idx===i) ? 'block' : 'none');
-  }
+  if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
+  steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
+  stepIndex=i; refreshProgress();
+  if(isSlideMode() && slidesWrapper){ slidesWrapper.style.transform = `translateX(-${i*100}%)`; }
+  try{ steps[i].scrollTop = 0; }catch(e){}
 }
 showStep(0);
 
@@ -940,69 +910,73 @@ function updateMascot(score){
   }catch(e){}
 }
 
+/* -------------------------------
+   1️⃣ 설문 카드 / 슬라이드 조정
+---------------------------------*/
+function updateSlideTransform() {
+  const slidesWrapper = document.getElementById('slidesWrapper');
+  if(!slidesWrapper) return;
+  const cardWidth = slidesWrapper.parentElement.offsetWidth; // 부모 기준 카드 너비
+  slidesWrapper.style.transform = `translateX(-${stepIndex * cardWidth}px)`;
+}
+window.addEventListener('resize', updateSlideTransform);
+window.addEventListener('load', updateSlideTransform);
+
+/* -------------------------------
+   2️⃣ 카드 화면 높이 고정 (iPad 세로형 포함)
+---------------------------------*/
+function fixCardHeight() {
+  const cards = ['surveyCard','summaryCard','reportCard','rankingSection'];
+  cards.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.minHeight = window.innerHeight + 'px';
+  });
+}
+window.addEventListener('resize', fixCardHeight);
+window.addEventListener('load', fixCardHeight);
+
+/* -------------------------------
+   3️⃣ PDF 생성 시 스케일 조정
+---------------------------------*/
 async function downloadFullReportPDF() {
-  const reportEl = document.getElementById('reportCard');
-  if (!reportEl) return alert('상세 리포트가 없습니다.');
-
-  // 🔹 PDF에 포함되지 않을 요소 숨기기
-  const hideEls = reportEl.querySelectorAll('.no-print, #historyPanel');
-  hideEls.forEach(el => el.style.display = 'none');
-
-  // 🔹 모든 숨겨진 섹션 강제 표시 (계획/세부 섹션)
-  reportEl.querySelectorAll('[style*="display:none"]').forEach(el => el.style.display = 'block');
-
-  // 🔹 렌더링 완료 대기
-  await new Promise(resolve => setTimeout(resolve, 100));
-
-  // 🔹 html2canvas 생성
+  const reportEl = document.getElementById('reportSection');
+  const dpr = window.devicePixelRatio || 1;
+  
   const canvas = await html2canvas(reportEl, {
-    scale: 2,
+    scale: 2 * dpr,
     useCORS: true,
     scrollY: 0,
     windowWidth: reportEl.scrollWidth,
     windowHeight: reportEl.scrollHeight,
     height: reportEl.scrollHeight
   });
-
+  
   const imgData = canvas.toDataURL('image/png');
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF('p', 'mm', 'a4');
-
+  const pdf = new jsPDF('p','pt','a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
-  const pdfScale = pageWidth / canvas.width;
-  const totalHeight = canvas.height * pdfScale;
-
-  // 🔹 한 페이지보다 크면 슬라이스
-  if (totalHeight <= pageHeight) {
-    pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, totalHeight);
-  } else {
-    let yOffset = 0;
-    const pageHeightPx = pageHeight / pdfScale;
-
-    while (yOffset < canvas.height) {
-      const sliceHeight = Math.min(pageHeightPx, canvas.height - yOffset);
-      const sliceCanvas = document.createElement('canvas');
-      sliceCanvas.width = canvas.width;
-      sliceCanvas.height = sliceHeight;
-
-      const ctx = sliceCanvas.getContext('2d');
-      ctx.drawImage(canvas, 0, yOffset, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
-
-      const sliceData = sliceCanvas.toDataURL('image/png');
-      pdf.addImage(sliceData, 'PNG', 0, 0, pageWidth, sliceHeight * pdfScale);
-
-      yOffset += sliceHeight;
-      if (yOffset < canvas.height) pdf.addPage();
-    }
+  
+  const imgWidth = pageWidth;
+  const imgHeight = canvas.height * (pageWidth / canvas.width);
+  
+  let position = 0;
+  while(position < imgHeight){
+    pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
+    position += pageHeight;
+    if(position < imgHeight) pdf.addPage();
   }
-
-  pdf.save(`Health_Report_${new Date().toISOString().slice(0,10)}.pdf`);
-
-  // 🔹 숨긴 요소 원래대로 복원
-  hideEls.forEach(el => el.style.display = '');
+  pdf.save('SurveyReport.pdf');
 }
 
+/* -------------------------------
+   4️⃣ 차트 재렌더링 (iPad resize 대응)
+---------------------------------*/
+window.addEventListener('resize', ()=>{
+  updateSlideTransform();
+  fixCardHeight();
+  if(summaryChart && lastResult) renderSummaryChart(lastResult.perItemScore);
+  if(radarChart && lastResult) showDetailedReport(lastResult);
+});
 
 /* ranking placeholder */
 /* ============================================================
@@ -1261,26 +1235,15 @@ function downloadPDF(){
   }).catch(e=>{ alert('PDF 생성 중 오류가 발생했습니다.'); console.error(e); });
 }
 
+/* initial responsive handler: ensure slide wrapper reset if resizing */
 
-/* 화면 크기/방향 대응: iPad 세로형 기준 */
-function isPortraitMode() {
-  return window.innerWidth < 1024; // 필요시 iPad 세로 폭에 맞게 조정
-}
 
-window.addEventListener('resize', () => {
-  // 기존 슬라이드 위치 조정
-  if (slidesWrapper) {
-    if (isPortraitMode()) {
-      slidesWrapper.style.transform = ''; // 세로형에서는 슬라이드 해제
-    } else {
-      slidesWrapper.style.transform = `translateX(-${stepIndex*100}%)`;
-    }
-  }
-
-  // 레이더 차트 크기 재조정
-  if (summaryChart) summaryChart.resize();
-  if (radarChart) radarChart.resize();
+window.addEventListener('resize', ()=>{
+  if(!slidesWrapper) return;
+  const cardWidth = slidesWrapper.parentElement.offsetWidth; // 부모 기준으로 너비 계산
+  slidesWrapper.style.transform = `translateX(-${stepIndex * cardWidth}px)`;
 });
+
 
 
 /* ============================================================
@@ -1441,4 +1404,3 @@ function handleFamilyExclusion(checkbox) {
 </script>
 </body>
 </html>
-
