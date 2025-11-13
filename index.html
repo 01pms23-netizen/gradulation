@@ -968,8 +968,10 @@ function updateMascot(score){
 function updateSlideTransform() {
   const slidesWrapper = document.getElementById('slidesWrapper');
   if(!slidesWrapper) return;
-  const cardWidth = slidesWrapper.parentElement.offsetWidth; // 부모 기준 카드 너비
-  slidesWrapper.style.transform = `translateX(-${stepIndex * cardWidth}px)`;
+  // slidesWrapper 너비는 steps.length * 100% 로 설정되어야 함
+  slidesWrapper.style.width = `${steps.length * 100}%`;
+  // 각 질문 항목 너비 100% / flex로 처리되어야 함 (이미 .question에 flex:0 0 100% 있음)
+  slidesWrapper.style.transform = `translateX(-${stepIndex * (100 / steps.length)}%)`;
 }
 window.addEventListener('resize', updateSlideTransform);
 window.addEventListener('load', updateSlideTransform);
@@ -1452,117 +1454,104 @@ function handleFamilyExclusion(checkbox) {
   }
 }
 
-/* -------------------------------
-   ✅ 높이 계산 및 강제 적용 함수 (FINAL FIX)
----------------------------------*/
-function applyDynamicHeight() {
-    const card = document.getElementById('surveyCard');
-    const header = document.querySelector('#surveyCard .headerRow');
-    const progress = document.querySelector('#surveyCard .progress');
-    const form = document.getElementById('surveyForm');
-    const slides = document.getElementById('slidesWrapper');
-    
-    // 이 요소들이 모두 존재하고, 768px 이상에서만 실행 (태블릿/슬라이드 모드)
-    if (!card || !header || !progress || !form || !slides || window.innerWidth < 768) {
-        return;
-    }
-    
-    // 카드 내부의 고정된 요소 높이 합산
-    const cardPaddingTop = parseFloat(window.getComputedStyle(card).paddingTop);
-    const cardPaddingBottom = parseFloat(window.getComputedStyle(card).paddingBottom);
-    
-    const fixedHeight = header.offsetHeight + progress.offsetHeight + cardPaddingTop + cardPaddingBottom;
-    
-    // 카드의 전체 높이 (calc(100vh - 56px))에서 고정된 요소를 뺀 순수한 콘텐츠 영역 높이
-    // .card의 실제 높이에서 고정 높이를 뺌
-    const remainingHeight = card.offsetHeight - fixedHeight;
-
-    // 🚨 높이 강제 적용 (가장 확실한 해결책)
-    form.style.height = remainingHeight + 'px';
-    slides.style.height = remainingHeight + 'px';
-
-    // 각 질문 요소의 높이를 강제 적용
-    const questions = slides.querySelectorAll('.question');
-    questions.forEach(q => {
-        q.style.height = remainingHeight + 'px';
-        
-        // Pager 높이 계산: Pager의 높이를 content 영역에서 뺌
-        const pager = q.querySelector('.pager');
-        if (pager) {
-            const pagerHeight = pager.offsetHeight + parseFloat(window.getComputedStyle(pager).paddingTop || 0);
-            const contentAreaHeight = remainingHeight - pagerHeight - 10; // 여유 공간 10px 뺌
-
-            // 질문 내용이 들어갈 실제 영역의 높이를 min-height로 강제
-            // 이는 .question 내의 입력 필드 wrapper가 있다면 더 복잡해지므로, 
-            // 여기서는 .question 자체의 높이를 고정하고 내부 스크롤에 의존합니다.
-            q.style.height = remainingHeight + 'px'; 
-        }
-    });
-
-    // 슬라이드 애니메이션 재적용 (높이 변경 후 위치 보정)
-    updateSlideTransform();
-}
-
-// -------------------------------------------------------------
-// 기존 resize 이벤트 핸들러에 높이 계산 함수를 추가합니다.
-// -------------------------------------------------------------
-window.addEventListener('resize', () => {
-    applyDynamicHeight(); // 높이 강제 계산 실행
-    updateSlideTransform();
-});
-window.addEventListener('load', () => {
-    applyDynamicHeight(); // 로드 시 높이 강제 계산 실행
-    showStep(0);
-});
-
-// -------------------------------------------------------------
-// 기존 nextStep/prevStep 함수에도 높이 계산을 추가합니다.
-// -------------------------------------------------------------
-const originalNextStep = nextStep;
-nextStep = function() {
-    originalNextStep();
-    applyDynamicHeight();
-};
-
-const originalPrevStep = prevStep;
-prevStep = function() {
-    originalPrevStep();
-    applyDynamicHeight();
-};
-/* ✅ 아이패드 Safari 세로 모드 대응 - 동적 높이 보정 */
+/* ✅ 아이패드 Safari 세로 모드 대응 - 동적 높이 자동 보정 (최종본) */
 function getViewportHeight() {
-  // iPad Safari의 안전한 실제 뷰포트 높이 계산
-  return window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  // iPad Safari의 실제 뷰포트 높이 계산 (키보드 고려)
+  const vv = window.visualViewport;
+  let h = vv ? vv.height : window.innerHeight;
+  if (h < 400) h = window.innerHeight; // 안전 최소 보정
+  return h;
 }
 
 function applyDynamicHeight() {
   const card = document.getElementById('surveyCard');
-  const header = document.querySelector('#surveyCard .headerRow');
-  const progress = document.querySelector('#surveyCard .progress');
+  const header = card?.querySelector('.headerRow');
+  const progress = card?.querySelector('.progress');
   const form = document.getElementById('surveyForm');
   const slides = document.getElementById('slidesWrapper');
   if (!card || !header || !progress || !form || !slides) return;
 
-  const vh = getViewportHeight(); // 수정된 높이
-  const cardPaddingTop = parseFloat(window.getComputedStyle(card).paddingTop);
-  const cardPaddingBottom = parseFloat(window.getComputedStyle(card).paddingBottom);
+  const vh = getViewportHeight();
+  const style = window.getComputedStyle(card);
+  const cardPaddingTop = parseFloat(style.paddingTop);
+  const cardPaddingBottom = parseFloat(style.paddingBottom);
   const fixedHeight = header.offsetHeight + progress.offsetHeight + cardPaddingTop + cardPaddingBottom;
-  const remainingHeight = vh - fixedHeight - 10; // 여유 10px
 
-  form.style.height = remainingHeight + 'px';
-  slides.style.height = remainingHeight + 'px';
+  const remainingHeight = vh - fixedHeight - 10; // 여유 10px
+  form.style.height = `${remainingHeight}px`;
+  slides.style.height = `${remainingHeight}px`;
+
+  // 각 질문 슬라이드 높이 동기화
   slides.querySelectorAll('.question').forEach(q => {
-    q.style.height = remainingHeight + 'px';
+    q.style.height = `${remainingHeight}px`;
   });
 
   updateSlideTransform();
 }
 
-// ✅ visualViewport 변화 감지 시에도 재계산
+/* ✅ 슬라이드 위치 갱신 (퍼센트 기반으로 통일) */
+function updateSlideTransform() {
+  const slidesWrapper = document.getElementById('slidesWrapper');
+  if (!slidesWrapper) return;
+  const steps = slidesWrapper.querySelectorAll('.question');
+  slidesWrapper.style.width = `${steps.length * 100}%`;
+  slidesWrapper.style.transform = `translateX(-${stepIndex * (100 / steps.length)}%)`;
+}
+
+/* ✅ 포커스 시 자동 스크롤 보정 */
+function focusScrollFix(el) {
+  setTimeout(() => {
+    try {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch(e) {}
+  }, 250);
+}
+
+function attachFocusHandlers() {
+  document.querySelectorAll('#slidesWrapper .question input, #slidesWrapper .question select, #slidesWrapper .question textarea').forEach(el => {
+    el.addEventListener('focus', () => {
+      const parentQ = el.closest('.question');
+      if (parentQ) focusScrollFix(parentQ);
+    });
+  });
+}
+
+/* ✅ 단계 이동 시 높이 및 포커스 보정 */
+function showStep(i) {
+  if (i < 0) i = 0;
+  if (i >= steps.length) i = steps.length - 1;
+  steps.forEach((s, idx) => s.classList.toggle('active', idx === i));
+  stepIndex = i;
+  refreshProgress();
+  updateSlideTransform();
+  applyDynamicHeight();
+  const active = steps[i];
+  const firstInput = active.querySelector('input, select, textarea');
+  if (firstInput) {
+    setTimeout(() => {
+      try {
+        firstInput.focus({ preventScroll: true });
+        focusScrollFix(active);
+      } catch(e) {}
+    }, 120);
+  }
+}
+
+/* ✅ visualViewport 변화 감지 */
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', applyDynamicHeight);
   window.visualViewport.addEventListener('scroll', applyDynamicHeight);
 }
+
+/* ✅ 초기화 */
+window.addEventListener('load', () => {
+  applyDynamicHeight();
+  attachFocusHandlers();
+  showStep(0);
+});
+window.addEventListener('resize', applyDynamicHeight);
+</script>
+
 
 </script>
 </body>
