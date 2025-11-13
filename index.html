@@ -66,18 +66,63 @@
   .invalid-note{color:#d14343;font-size:13px;margin-top:6px}
 
   /* tablet / iPad slide mode */
-  @media (min-width: 768px) and (max-width: 1365px) {
-    .app{height:100vh; margin:0 auto; max-width:980px}
-    .card{height:calc(100vh - 56px); display:flex; flex-direction:column;}
-    .slides { display:flex; flex:1 1 auto; transition:transform .45s ease; width:100%; overflow:hidden }
-    .question{ display:block; flex:0 0 100%; padding:18px 12px; overflow:auto }
+/* 2. 태블릿 / iPad slide mode (최종 안정화 레이아웃 - 1024px 이상 포함) */
+@media (min-width: 768px) { /* 🚨 1365px 제한을 제거하고 768px 이상에서 적용 */
+    .app{
+        height:100vh;
+        margin:0 auto;
+        max-width:1024px; /* iPad Pro 세로형에 맞게 최대 너비 설정 */
+        padding:18px 24px;
+        display: flex;
+        flex-direction: column;
+    }
+    .card{
+        height:calc(100vh - 56px); /* 전체 화면 높이에 고정 */
+        display:flex;
+        flex-direction:column;
+        overflow:hidden;
+    }
+    
+    #surveyForm {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        overflow: hidden;
+        height: 100%;
+    }
+    .slides {
+        display:flex;
+        flex:1 1 auto;
+        transition:transform .45s ease;
+        width: 100%;
+        overflow:hidden;
+        height: 100%;
+    }
+    
+    .question{
+        display:block; /* 기본적으로 block 상태를 유지 */
+        flex:0 0 100%; /* 슬라이드 너비 100% 강제 */
+        width: 100%;
+        height: 100%;
+        padding:18px 12px;
+        overflow-y:auto;
+        -webkit-overflow-scrolling: touch;
+        min-height: 0;
+    }
+    
+    /* 🚨 980px 이하에서 설정되었던 display:none을 Flexbox 충돌 없이 덮어쓰기 위해 다시 정의 */
+    .question:not(.active) {
+        display: none !important; 
+    }
+
     .headerRow{display:flex;align-items:center;gap:12px}
     .headerRow .mascot{order:0}
     .headerRow .titleWrap{flex:1}
     .card > .progress{margin:8px 0}
-    /* make pager buttons sticky bottom of slide for consistent placement */
-    .question .pager{position:sticky;bottom:8px;background:transparent;padding-top:8px}
-  }
+    
+    .question .pager{position:sticky;bottom:0px;background:var(--card);padding:10px;margin:0 -12px; border-top:1px solid #eee; z-index:10;}
+    .question:first-child .pager{bottom:0}
+}
 
   @media print{
     body{background:white}
@@ -435,7 +480,7 @@ let stepIndex = 0;
 const slidesWrapper = document.getElementById('slidesWrapper');
 
 function refreshProgress(){ const pct = Math.round(((stepIndex+1)/steps.length)*100); progressBar.style.width = pct + '%'; }
-function isSlideMode(){ return window.innerWidth >= 768 && window.innerWidth <= 1365; }
+function isSlideMode(){ return window.innerWidth >= 768; } // 🚨 768px 이상에서 항상 슬라이드 모드 활성화
 
 function showStep(i){
   if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
