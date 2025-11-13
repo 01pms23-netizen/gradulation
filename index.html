@@ -16,11 +16,12 @@
   :root{
     --navy:#0b2340; --accent:#0f4c81; --card:#ffffffee; --muted:#6b7788;
     --good:#1fbf7b; --warn:#f6c85f; --bad:#ef5350;
-    --maxw:980px; --glass: rgba(255,255,255,0.06);
+    --maxw:1200px; /* 1. 최대 너비를 1200px로 확장하여 12.9인치 화면을 거의 채우도록 수정 */
+    --glass: rgba(255,255,255,0.06);
   }
   *{box-sizing:border-box;font-family:"PretendardVariable","Noto Sans KR",system-ui,-apple-system}
   html,body{height:100%;margin:0;background:linear-gradient(180deg,#071428,#0b2340);color:var(--navy)}
-  .app{max-width:980px;margin:28px auto;padding:18px;display:grid;gap:16px}
+  .app{max-width:var(--maxw);margin:28px auto;padding:18px;display:grid;gap:16px}
   .card{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 12px 40px rgba(2,8,23,0.55)}
   h1{margin:0 0 6px;color:var(--accent);font-size:20px}
   p.lead{margin:0 0 12px;color:#445;font-size:14px}
@@ -65,18 +66,19 @@
 
   .invalid-note{color:#d14343;font-size:13px;margin-top:6px}
 
-  /* tablet / iPad slide mode */
-  @media (min-width: 768px) and (max-width: 1365px) {
-    .app{height:100vh; margin:0 auto; max-width:980px}
-    .card{height:calc(100vh - 56px); display:flex; flex-direction:column;}
+  /* 2. 태블릿 / iPad slide mode (12.9인치 세로까지 확장) */
+  @media (min-width: 768px) and (max-width: 1366px) {
+    .app{height:100vh; margin:0 auto; max-width:1024px; padding:18px 24px;} /* 12.9인치 세로에 최적화된 최대 너비 설정 및 패딩 증가 */
+    .card{height:calc(100vh - 56px); display:flex; flex-direction:column; overflow:hidden;} /* 화면 높이 전체 사용 */
     .slides { display:flex; flex:1 1 auto; transition:transform .45s ease; width:100%; overflow:hidden }
-    .question{ display:block; flex:0 0 100%; padding:18px 12px; overflow:auto }
+    .question{ display:block; flex:0 0 100%; padding:18px 12px; overflow-y:auto; -webkit-overflow-scrolling: touch; } /* 컨텐츠가 길 경우 스크롤 허용 */
     .headerRow{display:flex;align-items:center;gap:12px}
     .headerRow .mascot{order:0}
     .headerRow .titleWrap{flex:1}
     .card > .progress{margin:8px 0}
     /* make pager buttons sticky bottom of slide for consistent placement */
-    .question .pager{position:sticky;bottom:8px;background:transparent;padding-top:8px}
+    .question .pager{position:sticky;bottom:0px;background:var(--card);padding:10px;margin:0 -12px; border-top:1px solid #eee; z-index:10;} /* sticky pager: 스크롤해도 하단에 고정 */
+    .question:first-child .pager{bottom:0} /* 시작 페이지도 동일하게 */
   }
 
   @media print{
@@ -89,10 +91,10 @@
     .detail-card { margin-bottom: 6px !important; padding: 6px !important; }
   }
 /* ===== supplement select color override ===== */
-select.small { color: var(--navy) !important; }           /* 선택된 옵션 텍스트 색상을 진한 색으로 */
-select.small option { color: #0b2340 !important; }        /* option 내부 텍스트도 동일 색상 */
-
+select.small { color: var(--navy) !important; }
+select.small option { color: #0b2340 !important; }
 </style>
+
 </head>
 <body>
 <div class="app">
