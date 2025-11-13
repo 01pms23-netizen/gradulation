@@ -110,6 +110,9 @@
         min-height: 0;
     }
     
+    .question.active{
+      display: block;
+    }
     /* 🚨 980px 이하에서 설정되었던 display:none을 Flexbox 충돌 없이 덮어쓰기 위해 다시 정의 */
     .question:not(.active) {
         display: none !important; 
@@ -480,7 +483,7 @@ let stepIndex = 0;
 const slidesWrapper = document.getElementById('slidesWrapper');
 
 function refreshProgress(){ const pct = Math.round(((stepIndex+1)/steps.length)*100); progressBar.style.width = pct + '%'; }
-function isSlideMode(){ return window.innerWidth >= 768; } // 🚨 768px 이상에서 항상 슬라이드 모드 활성화
+function isSlideMode(){ return window.innerWidth >= 768 && window.innerWidth <= 1365; }
 
 function showStep(i){
   if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
