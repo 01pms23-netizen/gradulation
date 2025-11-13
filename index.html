@@ -66,66 +66,18 @@
   .invalid-note{color:#d14343;font-size:13px;margin-top:6px}
 
   /* tablet / iPad slide mode */
-/* 2. 태블릿 / iPad slide mode (최종 안정화 레이아웃 - 1024px 이상 포함) */
-@media (min-width: 768px) { /* 🚨 1365px 제한을 제거하고 768px 이상에서 적용 */
-    .app{
-        height:100vh;
-        margin:0 auto;
-        max-width:1024px; /* iPad Pro 세로형에 맞게 최대 너비 설정 */
-        padding:18px 24px;
-        display: flex;
-        flex-direction: column;
-    }
-    .card{
-        height:calc(100vh - 56px); /* 전체 화면 높이에 고정 */
-        display:flex;
-        flex-direction:column;
-        overflow:hidden;
-    }
-    
-    #surveyForm {
-        display: flex;
-        flex-direction: column;
-        flex: 1 1 auto;
-        overflow: hidden;
-        height: 100%;
-    }
-    .slides {
-        display:flex;
-        flex:1 1 auto;
-        transition:transform .45s ease;
-        width: 100%;
-        overflow:hidden;
-        height: 100%;
-    }
-    
-    .question{
-        display:block; /* 기본적으로 block 상태를 유지 */
-        flex:0 0 100%; /* 슬라이드 너비 100% 강제 */
-        width: 100%;
-        height: 100%;
-        padding:18px 12px;
-        overflow-y:auto;
-        -webkit-overflow-scrolling: touch;
-        min-height: 0;
-    }
-    
-    .question.active{
-      display: block;
-    }
-    /* 🚨 980px 이하에서 설정되었던 display:none을 Flexbox 충돌 없이 덮어쓰기 위해 다시 정의 */
-    .question:not(.active) {
-        display: none !important; 
-    }
-
+  @media (min-width: 768px) and (max-width: 1365px) {
+    .app{height:100vh; margin:0 auto; max-width:980px}
+    .card{height:calc(100vh - 56px); display:flex; flex-direction:column;}
+    .slides { display:flex; flex:1 1 auto; transition:transform .45s ease; width:100%; overflow:hidden }
+    .question{ display:block; flex:0 0 100%; padding:18px 12px; overflow:auto }
     .headerRow{display:flex;align-items:center;gap:12px}
     .headerRow .mascot{order:0}
     .headerRow .titleWrap{flex:1}
     .card > .progress{margin:8px 0}
-    
-    .question .pager{position:sticky;bottom:0px;background:var(--card);padding:10px;margin:0 -12px; border-top:1px solid #eee; z-index:10;}
-    .question:first-child .pager{bottom:0}
-}
+    /* make pager buttons sticky bottom of slide for consistent placement */
+    .question .pager{position:sticky;bottom:8px;background:transparent;padding-top:8px}
+  }
 
   @media print{
     body{background:white}
@@ -139,6 +91,15 @@
 /* ===== supplement select color override ===== */
 select.small { color: var(--navy) !important; }           /* 선택된 옵션 텍스트 색상을 진한 색으로 */
 select.small option { color: #0b2340 !important; }        /* option 내부 텍스트도 동일 색상 */
+
+
+.screenCard {
+  width: 100%;
+  min-height: 100vh;
+  overflow-y: auto;
+  display: none; /* JS에서 첫 화면만 보여줌 */
+}
+
 
 </style>
 </head>
@@ -447,7 +408,7 @@ select.small option { color: #0b2340 !important; }        /* option 내부 텍�
       </div>
       <div style="text-align:right">
         <button class="btn secondary no-print" onclick="backToSummary()">← 요약 보기</button>
-        <button class="btn primary" onclick="downloadFullReportPDF()">PDF 저장</button>
+    
 
         <button class="btn secondary no-print" onclick="startOver()" style="margin-left: 8px;">🔄 다시 하기</button>
       </div>
@@ -483,7 +444,8 @@ let stepIndex = 0;
 const slidesWrapper = document.getElementById('slidesWrapper');
 
 function refreshProgress(){ const pct = Math.round(((stepIndex+1)/steps.length)*100); progressBar.style.width = pct + '%'; }
-function isSlideMode(){ return window.innerWidth >= 768; } // 🚨 768px 이상에서 항상 슬라이드 모드 활성화 (CSS와 일치)
+function isSlideMode(){ return window.innerWidth >= 768 && window.innerWidth <= 1365; }
+
 function showStep(i){
   if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
   steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
@@ -955,77 +917,7 @@ function updateMascot(score){
       else mouth.setAttribute('d','M28 48 q4 -2 8 0'); // worried
     }
   }catch(e){}
-}
-
-/* -------------------------------
-   1️⃣ 설문 카드 / 슬라이드 조정
----------------------------------*/
-function updateSlideTransform() {
-  const slidesWrapper = document.getElementById('slidesWrapper');
-  if(!slidesWrapper) return;
-  const cardWidth = slidesWrapper.parentElement.offsetWidth; // 부모 기준 카드 너비
-  slidesWrapper.style.transform = `translateX(-${stepIndex * cardWidth}px)`;
-}
-window.addEventListener('resize', updateSlideTransform);
-window.addEventListener('load', updateSlideTransform);
-
-/* -------------------------------
-   2️⃣ 카드 화면 높이 고정 (iPad 세로형 포함)
----------------------------------*/
-function fixCardHeight() {
-  const cards = ['surveyCard','summaryCard','reportCard','rankingSection'];
-  cards.forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.style.minHeight = window.innerHeight + 'px';
-  });
-}
-window.addEventListener('resize', fixCardHeight);
-window.addEventListener('load', fixCardHeight);
-
-/* -------------------------------
-   3️⃣ PDF 생성 시 스케일 조정
----------------------------------*/
-async function downloadFullReportPDF() {
-  const reportEl = document.getElementById('reportSection');
-  const dpr = window.devicePixelRatio || 1;
-  
-  const canvas = await html2canvas(reportEl, {
-    scale: 2 * dpr,
-    useCORS: true,
-    scrollY: 0,
-    windowWidth: reportEl.scrollWidth,
-    windowHeight: reportEl.scrollHeight,
-    height: reportEl.scrollHeight
-  });
-  
-  const imgData = canvas.toDataURL('image/png');
-  const pdf = new jsPDF('p','pt','a4');
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  
-  const imgWidth = pageWidth;
-  const imgHeight = canvas.height * (pageWidth / canvas.width);
-  
-  let position = 0;
-  while(position < imgHeight){
-    pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
-    position += pageHeight;
-    if(position < imgHeight) pdf.addPage();
-  }
-  pdf.save('SurveyReport.pdf');
-}
-
-/* -------------------------------
-   4️⃣ 차트 재렌더링 (iPad resize 대응)
----------------------------------*/
-window.addEventListener('resize', ()=>{
-  updateSlideTransform();
-  fixCardHeight();
-  if(summaryChart && lastResult) renderSummaryChart(lastResult.perItemScore);
-  if(radarChart && lastResult) showDetailedReport(lastResult);
-});
-
-/* ranking placeholder */
+}/* ranking placeholder */
 /* ============================================================
   ✅ (추가 기능 2) 참여자 랭킹 (Leaderboard) + 관리자 기능 + PDF 수정
    ============================================================ */
@@ -1268,30 +1160,6 @@ function viewLeaderboardFromStart() {
 }
 
 
-/* PDF download (basic) */
-function downloadPDF(){
-  const node = document.getElementById('reportCard');
-  html2canvas(node, { scale: 1.2 }).then(canvas => {
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jspdf.jsPDF('p','mm','a4');
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save('health_report.pdf');
-  }).catch(e=>{ alert('PDF 생성 중 오류가 발생했습니다.'); console.error(e); });
-}
-
-/* initial responsive handler: ensure slide wrapper reset if resizing */
-
-
-window.addEventListener('resize', ()=>{
-  if(!slidesWrapper) return;
-  const cardWidth = slidesWrapper.parentElement.offsetWidth; // 부모 기준으로 너비 계산
-  slidesWrapper.style.transform = `translateX(-${stepIndex * cardWidth}px)`;
-});
-
-
 
 /* ============================================================
   🔐 관리자 모드 간편 초기화 (버튼 없음, 랭킹창 유지)
@@ -1447,6 +1315,50 @@ function handleFamilyExclusion(checkbox) {
   }
 }
 
+function fixScreenHeight() {
+  const cards = document.querySelectorAll('.screenCard'); // 모든 화면 요소
+  cards.forEach(card => {
+    card.style.minHeight = window.innerHeight + 'px';
+    card.style.display = 'none'; // 초기에는 모두 숨김
+  });
+}
+window.addEventListener('resize', fixScreenHeight);
+window.addEventListener('load', fixScreenHeight);
+
+// -----------------------------
+// 2️⃣ 화면 전환 버튼 로직
+// -----------------------------
+let currentScreen = 0;
+function showScreen(index){
+  const screens = document.querySelectorAll('.screenCard');
+  screens.forEach((screen, i) => {
+    screen.style.display = (i === index) ? 'block' : 'none';
+  });
+  currentScreen = index;
+}
+
+// -----------------------------
+// 3️⃣ 버튼 이벤트 연결
+// -----------------------------
+function setupNavigationButtons() {
+  document.querySelectorAll('.nextBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      showScreen(Math.min(currentScreen + 1, document.querySelectorAll('.screenCard').length - 1));
+    });
+  });
+  document.querySelectorAll('.prevBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      showScreen(Math.max(currentScreen - 1, 0));
+    });
+  });
+}
+
+// 초기 화면 표시 + 버튼 연결
+window.addEventListener('load', () => {
+  fixScreenHeight();
+  showScreen(0); 
+  setupNavigationButtons();
+});
 
 </script>
 </body>
