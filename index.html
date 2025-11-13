@@ -483,8 +483,7 @@ let stepIndex = 0;
 const slidesWrapper = document.getElementById('slidesWrapper');
 
 function refreshProgress(){ const pct = Math.round(((stepIndex+1)/steps.length)*100); progressBar.style.width = pct + '%'; }
-function isSlideMode(){ return window.innerWidth >= 768 && window.innerWidth <= 1365; }
-
+function isSlideMode(){ return window.innerWidth >= 768; } // 🚨 768px 이상에서 항상 슬라이드 모드 활성화 (CSS와 일치)
 function showStep(i){
   if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
   steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
