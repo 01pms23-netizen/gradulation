@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>사용자 설문 기반 자가진단 키오스크</title>
 
+<!-- libs -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -15,12 +16,11 @@
   :root{
     --navy:#0b2340; --accent:#0f4c81; --card:#ffffffee; --muted:#6b7788;
     --good:#1fbf7b; --warn:#f6c85f; --bad:#ef5350;
-    --maxw:1200px;
-    --glass: rgba(255,255,255,0.06);
+    --maxw:980px; --glass: rgba(255,255,255,0.06);
   }
   *{box-sizing:border-box;font-family:"PretendardVariable","Noto Sans KR",system-ui,-apple-system}
   html,body{height:100%;margin:0;background:linear-gradient(180deg,#071428,#0b2340);color:var(--navy)}
-  .app{max-width:var(--maxw);margin:28px auto;padding:18px;display:grid;gap:16px}
+  .app{max-width:980px;margin:28px auto;padding:18px;display:grid;gap:16px}
   .card{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 12px 40px rgba(2,8,23,0.55)}
   h1{margin:0 0 6px;color:var(--accent);font-size:20px}
   p.lead{margin:0 0 12px;color:#445;font-size:14px}
@@ -65,25 +65,18 @@
 
   .invalid-note{color:#d14343;font-size:13px;margin-top:6px}
 
-  /* 2. 태블릿 / iPad slide mode (스크롤 문제 해결) */
-  @media (min-width: 768px) and (max-width: 1366px) {
-    .app{height:100vh; margin:0 auto; max-width:1024px; padding:18px 24px;}
-    .card{height:calc(100vh - 56px); display:flex; flex-direction:column; overflow:hidden;}
-    
-    /* 🚀 수정된 부분: form이 남은 공간을 모두 채우도록 flex-grow를 적용 */
-    #surveyForm { display: flex; flex-direction: column; flex: 1 1 auto; overflow: hidden; }
+  /* tablet / iPad slide mode */
+  @media (min-width: 768px) and (max-width: 1365px) {
+    .app{height:100vh; margin:0 auto; max-width:980px}
+    .card{height:calc(100vh - 56px); display:flex; flex-direction:column;}
     .slides { display:flex; flex:1 1 auto; transition:transform .45s ease; width:100%; overflow:hidden }
-    
-    /* 🚀 수정된 부분: question이 slides 내부에서 남은 공간을 모두 차지하도록 하고 스크롤 허용 */
-    .question{ display:block; flex:0 0 100%; padding:18px 12px; overflow-y:auto; -webkit-overflow-scrolling: touch; height: 100%; } 
-    
+    .question{ display:block; flex:0 0 100%; padding:18px 12px; overflow:auto }
     .headerRow{display:flex;align-items:center;gap:12px}
     .headerRow .mascot{order:0}
     .headerRow .titleWrap{flex:1}
     .card > .progress{margin:8px 0}
-    /* sticky pager: 스크롤해도 하단에 고정 */
-    .question .pager{position:sticky;bottom:0px;background:var(--card);padding:10px;margin:0 -12px; border-top:1px solid #eee; z-index:10;}
-    .question:first-child .pager{bottom:0} 
+    /* make pager buttons sticky bottom of slide for consistent placement */
+    .question .pager{position:sticky;bottom:8px;background:transparent;padding-top:8px}
   }
 
   @media print{
@@ -96,13 +89,15 @@
     .detail-card { margin-bottom: 6px !important; padding: 6px !important; }
   }
 /* ===== supplement select color override ===== */
-select.small { color: var(--navy) !important; }
-select.small option { color: #0b2340 !important; }
+select.small { color: var(--navy) !important; }           /* 선택된 옵션 텍스트 색상을 진한 색으로 */
+select.small option { color: #0b2340 !important; }        /* option 내부 텍스트도 동일 색상 */
+
 </style>
 </head>
 <body>
 <div class="app">
 
+  <!-- SURVEY CARD -->
   <section class="card" id="surveyCard">
     <div class="headerRow" style="margin-bottom:8px">
       <div class="mascot" id="mascotSmall" title="건강 토끼" style="margin-right:8px">
@@ -129,6 +124,7 @@ select.small option { color: #0b2340 !important; }
     <form id="surveyForm" onsubmit="return false" style="height:100%">
       <div class="slides" id="slidesWrapper">
 
+        <!-- STEP 0 -->
         <div class="question active" data-step="0" id="step0">
           <label class="block">이름 <span class="small" style="font-weight:600;color:var(--muted)">(필수)</span></label>
           <input type="text" id="name" placeholder="예: 모이" />
@@ -142,6 +138,7 @@ select.small option { color: #0b2340 !important; }
           </div>
         </div>
 
+        <!-- STEP 1 -->
         <div class="question" data-step="1" id="step1">
           <div class="row">
             <div style="flex:1"><label class="block">연령(만) <span class="small">(필수)</span></label><input type="number" id="age" min="1" max="150" /></div>
@@ -151,6 +148,7 @@ select.small option { color: #0b2340 !important; }
           <div class="pager"><div class="meta">질문 2 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
         </div>
 
+        <!-- STEP 2 -->
         <div class="question" data-step="2" id="step2">
           <div class="grid2"><div><label class="block">키 (cm) <span class="small">(필수)</span></label><input type="number" id="height" placeholder="예: 170"></div><div><label class="block">체중 (kg) <span class="small">(필수)</span></label><input type="number" id="weight" placeholder="예: 64"></div></div>
           <p id="bmiText" class="muted" style="margin-top:8px"></p>
@@ -158,6 +156,7 @@ select.small option { color: #0b2340 !important; }
           <div class="pager"><div class="meta">질문 3 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="handleBMIandNext()">계산 후 다음</button></div></div>
         </div>
 
+        <!-- STEP 3 (Family History) -->
         <div class="question" data-step="3" id="step3">
           <label class="block">가족력(직계 가족 - 해당 시 체크)</label>
           <div id="familyRow" style="margin-bottom: 15px;">
@@ -199,6 +198,7 @@ select.small option { color: #0b2340 !important; }
           <div class="pager"><div class="meta">질문 4 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
         </div>
 
+        <!-- STEP 4: Personal history -->
         <div class="question" data-step="4" id="step4">
           <label class="block">본인 병력(과거/현재) - 해당 시 체크 (복수 선택 가능). 해당할 경우 항목에서 심각도를 선택하세요.</label>
 
@@ -253,6 +253,7 @@ select.small option { color: #0b2340 !important; }
           <div class="pager"><div class="meta">질문 5 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
         </div>
 
+        <!-- STEP 5: Smoking -->
         <div class="question" data-step="5" id="step5">
           <label class="block">흡연 상태 <span class="small">(필수)</span></label>
           <select id="smoke_status" onchange="updateSmokeDetails()">
@@ -280,6 +281,7 @@ select.small option { color: #0b2340 !important; }
           <div class="pager"><div class="meta">질문 6 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
         </div>
 
+        <!-- STEP 6: Alcohol -->
         <div class="question" data-step="6" id="step6">
           <label class="block">음주 빈도(지난 1개월 기준) <span class="small">(필수)</span></label>
           <select id="alcohol_freq" onchange="updateDrinkDetails()"><option value="0">전혀 마시지 않음</option><option value="1">월 1~3회</option><option value="2">주 1~2회</option><option value="3">주 3회 이상</option></select>
@@ -292,6 +294,7 @@ select.small option { color: #0b2340 !important; }
           <div class="pager"><div class="meta">질문 7 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
         </div>
 
+        <!-- STEP 7: Physical -->
         <div class="question" data-step="7" id="step7">
           <label class="block">주당 격한 신체 활동(운동) 시간</label>
           <select id="physical_minutes"><option value="0">0분</option><option value="1">1~60분</option><option value="2">61~150분</option><option value="3">151분 이상</option></select>
@@ -300,6 +303,7 @@ select.small option { color: #0b2340 !important; }
           <div class="pager"><div class="meta">질문 8 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
         </div>
 
+        <!-- STEP 8: Diet -->
         <div class="question" data-step="8" id="step8">
           <label class="block">물 섭취량(하루)</label>
           <select id="water_intake"><option value="0">500ml 미만</option><option value="1">500ml~1L</option><option value="2">1~2L</option><option value="3">2L 이상</option></select>
@@ -316,6 +320,7 @@ select.small option { color: #0b2340 !important; }
           <div class="pager"><div class="meta">질문 9 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
         </div>
 
+        <!-- STEP 9: Sleep & Mental -->
         <div class="question" data-step="9" id="step9">
           <label class="block">평균 수면시간 <span class="small">(필수)</span></label>
           <select id="sleep_hours"><option value="0">5시간 미만</option><option value="1">5~7시간</option><option value="2">7~9시간</option><option value="3">9시간 이상</option></select>
@@ -333,6 +338,7 @@ select.small option { color: #0b2340 !important; }
           <div class="pager"><div class="meta">질문 10 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
         </div>
 
+        <!-- STEP 10: Screening -->
         <div class="question" data-step="10" id="step10">
           <label class="block">최근 1년 내 정기검진 여부</label>
           <select id="screening"><option value="1">예</option><option value="0">아니오</option></select>
@@ -343,15 +349,18 @@ select.small option { color: #0b2340 !important; }
           <div class="pager"><div class="meta">질문 11 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
         </div>
 
+        <!-- STEP 11: Final -->
         <div class="question" data-step="11" id="step11">
           <label class="block">확인 후 결과 보기</label>
           <div class="small">요약 보기를 누르시면 결과가 나옵니다.</div>
           <div class="pager"><div class="meta">최종 점검</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="computeAndShowSummary()">요약 보기</button></div></div>
         </div>
 
-      </div></form>
+      </div><!-- slides end -->
+    </form>
   </section>
 
+  <!-- SUMMARY CARD -->
   <section id="summaryCard" class="card" style="display:none">
     <div class="row" style="align-items:center;justify-content:space-between">
       <div>
@@ -381,6 +390,7 @@ select.small option { color: #0b2340 !important; }
     <footer class="footer-note">자세한 권고는 상단의 '자세히 보기'를 눌러 확인하세요.</footer>
   </section>
 
+  <!-- DETAILED REPORT -->
   <section id="reportCard" class="card" style="display:none">
     <div class="row" style="align-items:center;justify-content:space-between">
       <div>
@@ -425,7 +435,7 @@ let stepIndex = 0;
 const slidesWrapper = document.getElementById('slidesWrapper');
 
 function refreshProgress(){ const pct = Math.round(((stepIndex+1)/steps.length)*100); progressBar.style.width = pct + '%'; }
-function isSlideMode(){ return window.innerWidth >= 768 && window.innerWidth <= 1366; } 
+function isSlideMode(){ return window.innerWidth >= 768 && window.innerWidth <= 1365; }
 
 function showStep(i){
   if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
@@ -535,24 +545,14 @@ function syncParent(parentValue, subCheckbox){
 }
 
 /* family none exclusivity */
-function handleFamilyExclusion(checkbox) {
-  // 🚀 모든 체크박스를 찾는 범위: familyRow 내부의 모든 체크박스
-  const allFamilyCheckboxes = document.querySelectorAll('#familyRow input[type="checkbox"]');
-  
-  if (checkbox.value === 'none' && checkbox.checked) {
-    // '해당 없음'을 선택하면, 모든 체크박스 해제
-    allFamilyCheckboxes.forEach(cb => {
-      // '해당 없음' 자신을 제외하고 모두 해제
-      if (cb.value !== 'none') {
-        cb.checked = false;
-      }
+function handleFamilyExclusion(el){
+  if(el.value==='none' && el.checked){
+    document.querySelectorAll('input[name="family"]').forEach(i=>{
+      if(i.value!=='none'){ i.checked=false; }
     });
-  } else if (checkbox.value !== 'none' && checkbox.checked) {
-    // 다른 항목을 선택하면, '해당 없음' 해제
-    const noneCheckbox = document.querySelector('input[name="family"][value="none"]');
-    if (noneCheckbox) {
-      noneCheckbox.checked = false;
-    }
+  } else if(el.value !== 'none' && el.checked){
+    const none = document.querySelector('input[name="family"][value="none"]');
+    if(none) none.checked=false;
   }
 }
 
@@ -622,49 +622,6 @@ function computeAndShowSummary(){
   q('surveyCard').style.display='none';
   q('summaryCard').style.display='block';
   window.scrollTo({top:0,behavior:'smooth'});
-
-  // 🚀 [새로운 저장 로직] 결과가 계산되는 시점(요약 화면 표시 전)에 한 번만 랭킹에 저장
-  if (lastResult && lastResult.name && lastResult.score) {
-      updateLeaderboard(lastResult.name, lastResult.score);
-  }
-  
-  // [1] '히스토리 저장' 버튼 제거 (텍스트 기준으로 탐색)
-  const buttons = document.querySelectorAll('#summaryCard button');
-  buttons.forEach(btn => {
-    if (btn.textContent.includes('히스토리 저장')) btn.remove();
-  });
-
- // [2] 랭킹 보기 버튼 추가 (중복 방지)
-  let btn = document.getElementById('rankBtn');
-  
-  // ⭐️ [복구된 코드] 버튼이 없으면 새로 생성하고 요약 카드에 추가합니다.
-  if (!btn) {
-    btn = document.createElement('button');
-    btn.id = 'rankBtn'; 
-    btn.className = 'btn secondary';
-    btn.textContent = '🏆 랭킹 보기';
-    btn.style.marginTop = '12px';
-    
-    // 버튼을 summaryCard의 가장 아래에 추가
-    document.getElementById('summaryCard').appendChild(btn); 
-  }
-  
-  // ⭐️ 랭킹 보기 버튼의 onclick 로직은 이제 저장 없이 화면 전환만 담당합니다.
-  btn.onclick = () => {
-    isFromSummary = true; 
-    const rbtn = document.getElementById('rankingReturnBtn');
-    if (rbtn) {
-        rbtn.textContent = '← 요약으로 돌아가기'; 
-        rbtn.onclick = returnFromRanking; 
-    }
-    
-    // ⭐️ (변경됨) 저장 로직은 제거하고, 오직 렌더링만 호출합니다.
-    renderLeaderboard(lastResult.name, lastResult.score); 
-    
-    document.getElementById('summaryCard').style.display = 'none';
-    document.getElementById('rankingSection').style.display = 'block';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 }
 
 /* risk helpers */
@@ -1106,7 +1063,53 @@ function renderLeaderboard(currentName, currentScore) {
 
 
 // 🧾 요약 생성 후 “랭킹 보기” 버튼 추가
-/* (Original computeAndShowSummary is updated inline above for correct context/flow) */
+const originalCompute = computeAndShowSummary;
+computeAndShowSummary = function() {
+  originalCompute(); // 기존 기능 실행 (점수 계산 및 lastResult 설정)
+
+  // 🚀 [새로운 저장 로직] 결과가 계산되는 시점(요약 화면 표시 전)에 한 번만 랭킹에 저장
+  if (lastResult && lastResult.name && lastResult.score) {
+      updateLeaderboard(lastResult.name, lastResult.score);
+  }
+  
+  // [1] '히스토리 저장' 버튼 제거 (텍스트 기준으로 탐색)
+  const buttons = document.querySelectorAll('#summaryCard button');
+  buttons.forEach(btn => {
+    if (btn.textContent.includes('히스토리 저장')) btn.remove();
+  });
+
+ // [2] 랭킹 보기 버튼 추가 (중복 방지)
+  let btn = document.getElementById('rankBtn');
+  
+  // ⭐️ [복구된 코드] 버튼이 없으면 새로 생성하고 요약 카드에 추가합니다.
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'rankBtn'; 
+    btn.className = 'btn secondary';
+    btn.textContent = '🏆 랭킹 보기';
+    btn.style.marginTop = '12px';
+    
+    // 버튼을 summaryCard의 가장 아래에 추가
+    document.getElementById('summaryCard').appendChild(btn); 
+  }
+  
+  // ⭐️ 랭킹 보기 버튼의 onclick 로직은 이제 저장 없이 화면 전환만 담당합니다.
+  btn.onclick = () => {
+    isFromSummary = true; 
+    const rbtn = document.getElementById('rankingReturnBtn');
+    if (rbtn) {
+        rbtn.textContent = '← 요약으로 돌아가기'; 
+        rbtn.onclick = returnFromRanking; 
+    }
+    
+    // ⭐️ (변경됨) 저장 로직은 제거하고, 오직 렌더링만 호출합니다.
+    renderLeaderboard(lastResult.name, lastResult.score); 
+    
+    document.getElementById('summaryCard').style.display = 'none';
+    document.getElementById('rankingSection').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+};
 let isFromSummary = false; // 현재 랭킹 화면으로 진입한 경로를 추적하는 플래그
 
 /* 🏆 랭킹 화면에서 복귀 (경로에 따라 분기) */
@@ -1228,22 +1231,28 @@ function downloadPDF(){
   }).catch(e=>{ alert('PDF 생성 중 오류가 발생했습니다.'); console.error(e); });
 }
 
-/* initial responsive handler: ensure slide wrapper reset if resizing */
-window.addEventListener('resize', ()=>{
-  // if leaving slide mode, remove transform
-  if(!isSlideMode() && slidesWrapper) slidesWrapper.style.transform = '';
-  else if(isSlideMode() && slidesWrapper) slidesWrapper.style.transform = `translateX(-${stepIndex*100}%)`;
+
+/* 화면 크기/방향 대응: iPad 세로형 기준 */
+function isPortraitMode() {
+  return window.innerWidth < 1024; // 필요시 iPad 세로 폭에 맞게 조정
+}
+
+window.addEventListener('resize', () => {
+  // 기존 슬라이드 위치 조정
+  if (slidesWrapper) {
+    if (isPortraitMode()) {
+      slidesWrapper.style.transform = ''; // 세로형에서는 슬라이드 해제
+    } else {
+      slidesWrapper.style.transform = `translateX(-${stepIndex*100}%)`;
+    }
+  }
+
+  // 레이더 차트 크기 재조정
+  if (summaryChart) summaryChart.resize();
+  if (radarChart) radarChart.resize();
 });
 
-/* small UX: toggle checkbtn visuals */
-document.querySelectorAll('.checkbtn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const inp = btn.querySelector('input');
-    if(!inp) return;
-    inp.checked = !inp.checked;
-    btn.classList.toggle('active', inp.checked);
-  });
-});
+
 /* ============================================================
   🔐 관리자 모드 간편 초기화 (버튼 없음, 랭킹창 유지)
    ============================================================ */
