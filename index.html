@@ -87,10 +87,9 @@
     
     #surveyForm {
         display: flex;
-        flex-direction: column;
         flex: 1 1 auto;
         overflow: hidden;
-        height: 100%;
+        min-height: 0;
     }
     .slides {
         display:flex;
@@ -98,11 +97,11 @@
         transition:transform .45s ease;
         width: 100%;
         overflow:hidden;
-        height: 100%;
+        height: 100;
     }
     
     .question{
-        display:block; /* 기본적으로 block 상태를 유지 */
+        display:block;
         flex:0 0 100%; /* 슬라이드 너비 100% 강제 */
         width: 100%;
         height: 100%;
@@ -110,6 +109,7 @@
         overflow-y:auto;
         -webkit-overflow-scrolling: touch;
         min-height: 0;
+        min-width: 0;
     }
     /* 🚨 980px 이하에서 설정되었던 display:none을 Flexbox 충돌 없이 덮어쓰기 위해 다시 정의 */
     .question:not(.active) {
@@ -167,7 +167,7 @@ select.small option { color: #0b2340 !important; }        /* option 내부 텍�
 
     <div class="progress"><i id="progressBar"></i></div>
 
-    <form id="surveyForm" onsubmit="return false" style="height:100%">
+    <form id="surveyForm" onsubmit="return false">
       <div class="slides" id="slidesWrapper">
 
         <!-- STEP 0 -->
@@ -474,6 +474,7 @@ select.small option { color: #0b2340 !important; }        /* option 내부 텍�
 </div>
 
 <script>
+  
 /* ====== Pager control + validation + enter-key navigation ====== */
 const steps = Array.from(document.querySelectorAll('.question'));
 const progressBar = document.getElementById('progressBar');
@@ -483,11 +484,12 @@ const slidesWrapper = document.getElementById('slidesWrapper');
 function refreshProgress(){ const pct = Math.round(((stepIndex+1)/steps.length)*100); progressBar.style.width = pct + '%'; }
 function isSlideMode(){ return window.innerWidth >= 768; } // 🚨 768px 이상에서 항상 슬라이드 모드 활성화 (CSS와 일치)
 function showStep(i){
-  if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
-  steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
-  stepIndex=i; refreshProgress();
-  if(isSlideMode() && slidesWrapper){ slidesWrapper.style.transform = `translateX(-${i*100}%)`; }
-  try{ steps[i].scrollTop = 0; }catch(e){}
+  if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
+  steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
+  stepIndex=i; refreshProgress();
+  
+  if(isSlideMode() && slidesWrapper){ slidesWrapper.style.transform = `translateX(-${i*100}%)`; }
+  // try{ steps[i].scrollTop = 0; }catch(e){} 🚨 이 코드는 삭제되어야 합니다.
 }
 showStep(0);
 
@@ -550,8 +552,13 @@ function validateStep(i){
 }
 
 function nextStep(){
-  if(!validateStep(stepIndex)) return;
-  if(stepIndex < steps.length-1) showStep(stepIndex+1);
+    // 🚨 최종 수정: 유효성 검사 실패 시 경고가 표시될 시간을 준 후, 다음 프레임에서 showStep 실행
+    if(!validateStep(stepIndex)) return; 
+
+    // 유효성 검사를 통과했을 때만 애니메이션을 예약합니다.
+    window.requestAnimationFrame(() => {
+        if(stepIndex < steps.length-1) showStep(stepIndex+1);
+    });
 }
 function prevStep(){ if(stepIndex > 0) showStep(stepIndex-1); }
 
@@ -1445,6 +1452,117 @@ function handleFamilyExclusion(checkbox) {
   }
 }
 
+/* -------------------------------
+   ✅ 높이 계산 및 강제 적용 함수 (FINAL FIX)
+---------------------------------*/
+function applyDynamicHeight() {
+    const card = document.getElementById('surveyCard');
+    const header = document.querySelector('#surveyCard .headerRow');
+    const progress = document.querySelector('#surveyCard .progress');
+    const form = document.getElementById('surveyForm');
+    const slides = document.getElementById('slidesWrapper');
+    
+    // 이 요소들이 모두 존재하고, 768px 이상에서만 실행 (태블릿/슬라이드 모드)
+    if (!card || !header || !progress || !form || !slides || window.innerWidth < 768) {
+        return;
+    }
+    
+    // 카드 내부의 고정된 요소 높이 합산
+    const cardPaddingTop = parseFloat(window.getComputedStyle(card).paddingTop);
+    const cardPaddingBottom = parseFloat(window.getComputedStyle(card).paddingBottom);
+    
+    const fixedHeight = header.offsetHeight + progress.offsetHeight + cardPaddingTop + cardPaddingBottom;
+    
+    // 카드의 전체 높이 (calc(100vh - 56px))에서 고정된 요소를 뺀 순수한 콘텐츠 영역 높이
+    // .card의 실제 높이에서 고정 높이를 뺌
+    const remainingHeight = card.offsetHeight - fixedHeight;
+
+    // 🚨 높이 강제 적용 (가장 확실한 해결책)
+    form.style.height = remainingHeight + 'px';
+    slides.style.height = remainingHeight + 'px';
+
+    // 각 질문 요소의 높이를 강제 적용
+    const questions = slides.querySelectorAll('.question');
+    questions.forEach(q => {
+        q.style.height = remainingHeight + 'px';
+        
+        // Pager 높이 계산: Pager의 높이를 content 영역에서 뺌
+        const pager = q.querySelector('.pager');
+        if (pager) {
+            const pagerHeight = pager.offsetHeight + parseFloat(window.getComputedStyle(pager).paddingTop || 0);
+            const contentAreaHeight = remainingHeight - pagerHeight - 10; // 여유 공간 10px 뺌
+
+            // 질문 내용이 들어갈 실제 영역의 높이를 min-height로 강제
+            // 이는 .question 내의 입력 필드 wrapper가 있다면 더 복잡해지므로, 
+            // 여기서는 .question 자체의 높이를 고정하고 내부 스크롤에 의존합니다.
+            q.style.height = remainingHeight + 'px'; 
+        }
+    });
+
+    // 슬라이드 애니메이션 재적용 (높이 변경 후 위치 보정)
+    updateSlideTransform();
+}
+
+// -------------------------------------------------------------
+// 기존 resize 이벤트 핸들러에 높이 계산 함수를 추가합니다.
+// -------------------------------------------------------------
+window.addEventListener('resize', () => {
+    applyDynamicHeight(); // 높이 강제 계산 실행
+    updateSlideTransform();
+});
+window.addEventListener('load', () => {
+    applyDynamicHeight(); // 로드 시 높이 강제 계산 실행
+    showStep(0);
+});
+
+// -------------------------------------------------------------
+// 기존 nextStep/prevStep 함수에도 높이 계산을 추가합니다.
+// -------------------------------------------------------------
+const originalNextStep = nextStep;
+nextStep = function() {
+    originalNextStep();
+    applyDynamicHeight();
+};
+
+const originalPrevStep = prevStep;
+prevStep = function() {
+    originalPrevStep();
+    applyDynamicHeight();
+};
+/* ✅ 아이패드 Safari 세로 모드 대응 - 동적 높이 보정 */
+function getViewportHeight() {
+  // iPad Safari의 안전한 실제 뷰포트 높이 계산
+  return window.visualViewport ? window.visualViewport.height : window.innerHeight;
+}
+
+function applyDynamicHeight() {
+  const card = document.getElementById('surveyCard');
+  const header = document.querySelector('#surveyCard .headerRow');
+  const progress = document.querySelector('#surveyCard .progress');
+  const form = document.getElementById('surveyForm');
+  const slides = document.getElementById('slidesWrapper');
+  if (!card || !header || !progress || !form || !slides) return;
+
+  const vh = getViewportHeight(); // 수정된 높이
+  const cardPaddingTop = parseFloat(window.getComputedStyle(card).paddingTop);
+  const cardPaddingBottom = parseFloat(window.getComputedStyle(card).paddingBottom);
+  const fixedHeight = header.offsetHeight + progress.offsetHeight + cardPaddingTop + cardPaddingBottom;
+  const remainingHeight = vh - fixedHeight - 10; // 여유 10px
+
+  form.style.height = remainingHeight + 'px';
+  slides.style.height = remainingHeight + 'px';
+  slides.querySelectorAll('.question').forEach(q => {
+    q.style.height = remainingHeight + 'px';
+  });
+
+  updateSlideTransform();
+}
+
+// ✅ visualViewport 변화 감지 시에도 재계산
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', applyDynamicHeight);
+  window.visualViewport.addEventListener('scroll', applyDynamicHeight);
+}
 
 </script>
 </body>
