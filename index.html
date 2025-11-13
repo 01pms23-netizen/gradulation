@@ -68,17 +68,8 @@
 /* 2. 태블릿 / iPad slide mode */
   @media (min-width: 768px) and (max-width: 1366px) {
     .app{height:100vh; margin:0 auto; max-width:1024px; padding:18px 24px;}
-    .card{
-        height:calc(100vh - 56px); 
-        display:flex; 
-        flex-direction:column; 
-        overflow:hidden;
-    }
-    
-    #surveyForm { 
-        display: flex; 
-        flex-direction: column; 
-        flex: 1 1 auto; 
+    .card{height:calc(100vh - 56px); display:flex; flex-direction:column; overflow:hidden;}
+    #surveyForm {display: flex; flex-direction: column; flex: 1 1 auto; 
         overflow: hidden; 
         height: 100%; 
     }
@@ -90,6 +81,9 @@
         overflow:hidden; 
         height: 100%; 
     }
+    .question:not(.active) {
+      display: none !important;
+  }
     
     .question{ 
         display:block; 
@@ -473,8 +467,12 @@ function showStep(i){
   if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
   steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
   stepIndex=i; refreshProgress();
-  if(isSlideMode() && slidesWrapper){ slidesWrapper.style.transform = `translateX(-${i*100}%)`; }
-  // 🚨 이전에 오류를 일으키던 스크롤 보정 코드를 제거합니다.
+  if(isSlideMode() && slidesWrapper){ 
+    slidesWrapper.style.transform = `translateX(-${i*100}%)`; 
+  } else {
+    // iPad 세로형이 아닌 데스크톱 모드일 때, display: block/none을 사용하여 전환 보장
+    steps.forEach((s,idx)=> s.style.display = (idx===i) ? 'block' : 'none');
+  }
 }
 showStep(0);
 
