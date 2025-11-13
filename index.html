@@ -470,11 +470,11 @@ function refreshProgress(){ const pct = Math.round(((stepIndex+1)/steps.length)*
 function isSlideMode(){ return window.innerWidth >= 768 && window.innerWidth <= 1365; }
 
 function showStep(i){
-  if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
-  steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
-  stepIndex=i; refreshProgress();
-  if(isSlideMode() && slidesWrapper){ slidesWrapper.style.transform = `translateX(-${i*100}%)`; }
-  try{ steps[i].scrollTop = 0; }catch(e){}
+  if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
+  steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
+  stepIndex=i; refreshProgress();
+  if(isSlideMode() && slidesWrapper){ slidesWrapper.style.transform = `translateX(-${i*100}%)`; }
+  // 🚨 이전에 오류를 일으키던 스크롤 보정 코드를 제거합니다.
 }
 showStep(0);
 
@@ -1443,3 +1443,4 @@ function handleFamilyExclusion(checkbox) {
 </script>
 </body>
 </html>
+
