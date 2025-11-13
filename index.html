@@ -20,9 +20,8 @@
   }
   *{box-sizing:border-box;font-family:"PretendardVariable","Noto Sans KR",system-ui,-apple-system}
   html,body{height:100%;margin:0;background:linear-gradient(180deg,#071428,#0b2340);color:var(--navy)}
-/* Line 33 부근: 데스크톱 기본 .app 설정을 충돌 방지 위해 수정 */
-.app{max-width:980px;margin:28px auto;padding:18px;display:grid;gap:16px; min-height: 100%;} 
-/* 🚨 min-height: 100% 추가 (Flexbox 높이 상속 시작점 확보) */  .card{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 12px 40px rgba(2,8,23,0.55)}
+  .app{max-width:980px;margin:28px auto;padding:18px;display:grid;gap:16px}
+  .card{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 12px 40px rgba(2,8,23,0.55)}
   h1{margin:0 0 6px;color:var(--accent);font-size:20px}
   p.lead{margin:0 0 12px;color:#445;font-size:14px}
   label.block{display:block;margin:8px 0 6px;font-weight:700;color:var(--navy)}
@@ -52,7 +51,7 @@
   .checkbtn input{display:none}
   .checkbtn.active{background:var(--accent);color:white;box-shadow:0 8px 24px rgba(11,36,64,0.18)}
 
-  /* mascot styles */
+  /* mascot: updated, cuter flat style */
   .mascot{width:82px;height:82px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(2,8,23,0.18)}
   .mascot svg{width:64px;height:64px}
   .mascotCaption{margin-top:10px;font-size:13px;color:var(--muted);text-align:center}
@@ -64,80 +63,75 @@
   .invalid { border-color:#ef6b6b !important; box-shadow:0 6px 18px rgba(239,107,107,0.08); animation: shake .36s; }
   @keyframes shake { 0%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}100%{transform:translateX(0)} }
 
+  /* subtle helper for invalid message */
   .invalid-note{color:#d14343;font-size:13px;margin-top:6px}
 
-  /* tablet / iPad slide mode */
-/* 2. 태블릿 / iPad slide mode (최종 안정화 레이아웃 - 1024px 이상 포함) */
-@media (min-width: 768px) { /* 🚨 1365px 제한을 제거하고 768px 이상에서 적용 */
-    .app{
-        height:100vh;
-        margin:0 auto;
-        max-width:1024px; /* iPad Pro 세로형에 맞게 최대 너비 설정 */
-        padding:18px 24px;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-    }
-    .card{
-        height:calc(100vh - 56px); /* 전체 화면 높이에 고정 */
-        display:flex;
-        flex-direction:column;
-        overflow:hidden;
-    }
-    
-    #surveyForm {
-        display: flex;
-        flex: 1 1 auto;
-        overflow: hidden;
-        min-height: 0;
-    }
-    .slides {
-        display:flex;
-        flex:1 1 auto;
-        transition:transform .45s ease;
-        width: 100%;
-        overflow:hidden;
-        height: 100;
-    }
-    
-    .question{
-        display:block;
-        flex:0 0 100%; /* 슬라이드 너비 100% 강제 */
-        width: 100%;
-        height: 100%;
-        padding:18px 12px;
-        overflow-y:auto;
-        -webkit-overflow-scrolling: touch;
-        min-height: 0;
-        min-width: 0;
-    }
-    /* 🚨 980px 이하에서 설정되었던 display:none을 Flexbox 충돌 없이 덮어쓰기 위해 다시 정의 */
-    .question:not(.active) {
-        display: none !important; 
-    }
-
-    .headerRow{display:flex;align-items:center;gap:12px}
-    .headerRow .mascot{order:0}
-    .headerRow .titleWrap{flex:1}
-    .card > .progress{margin:8px 0}
-    
-    .question .pager{position:sticky;bottom:0px;background:var(--card);padding:10px;margin:0 -12px; border-top:1px solid #eee; z-index:10;}
-    .question:first-child .pager{bottom:0}
-}
-
+/* ensure cards are not split across pages for print */
   @media print{
     body{background:white}
     .card{page-break-inside: avoid; -webkit-print-color-adjust: exact}
     button, .pager, .no-print { display:none !important; }
     .mascotCaption{display:none}
-    canvas{max-height:140px !important}
+    /* 🚀 캔버스 최대 높이를 160px에서 140px로 추가 축소 */
+    canvas{max-height:140px !important} 
+    /* 🚀 상세 항목의 여백을 0으로 설정하여 압축 */
     #detailList, #planSection { margin: 0 !important; padding: 0 !important; }
     .detail-card { margin-bottom: 6px !important; padding: 6px !important; }
   }
-/* ===== supplement select color override ===== */
-select.small { color: var(--navy) !important; }           /* 선택된 옵션 텍스트 색상을 진한 색으로 */
-select.small option { color: #0b2340 !important; }        /* option 내부 텍스트도 동일 색상 */
+  @page{ margin: 10mm; }
 
+  /* small responsive tweak for pdf slices */
+  .report-wrap{padding:8px}
+
+  /* 🚀 랭킹 상위 3명 강조 스타일 */
+  .rank-gold{background:#fff8e1; font-weight:900; color:var(--navy); border-left: 4px solid #ffcc00;}
+  .rank-silver{background:#f0f4f8; font-weight:800; color:#445;}
+  .rank-bronze{background:#f5f7f9; font-weight:700; color:#555;}
+
+
+  /* ... 기존 CSS 코드 ... */
+
+  /* 🚀 태블릿/아이패드 세로 모드 (Portrait, ~1024px) 최적화 */
+  @media (min-width: 768px) and (max-width: 1365px) {
+    /* 캔버스 (차트) 높이 추가 압축 */
+    canvas {
+        height: 180px; 
+    }
+
+    /* 상세 리포트 항목 (detail-card) 압축 */
+    .detail-card {
+        padding: 8px !important;
+        margin-bottom: 5px !important; /* 마진 더 줄임 */
+        font-size: 14px;
+    }
+    
+    /* 제목 및 부제 여백 축소 */
+    .report-wrap {
+        margin-top: 8px !important;
+        padding: 4px;
+    }
+
+    /* 작은 텍스트와 목록 글꼴 크기 조정 */
+    .small, .muted, #planContent li {
+        font-size: 11px;
+    }
+    
+    /* 개인 맞춤 플랜 목록 여백 축소 */
+    #planContent ul {
+        margin: 4px 0 0 16px;
+        padding-left: 0;
+    }
+    #planContent h3 {
+        font-size: 16px;
+    }
+  }
+
+  /* 기존 print 모드 스타일 유지 (PDF 출력 압축) */
+  @media print{
+    /* ... (기존 PDF 압축 CSS 유지) ... */
+    canvas{max-height:140px !important} 
+    /* ... */
+  }
 </style>
 </head>
 <body>
@@ -145,264 +139,286 @@ select.small option { color: #0b2340 !important; }        /* option 내부 텍�
 
   <!-- SURVEY CARD -->
   <section class="card" id="surveyCard">
-    <div class="headerRow" style="margin-bottom:8px">
-      <div class="mascot" id="mascotSmall" title="건강 토끼" style="margin-right:8px">
-        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="rabbit">
-          <rect width="64" height="64" rx="12" fill="#ffffff"/>
-          <path d="M20 8 q6 -6 12 0" fill="#fff" stroke="#0b2340" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M44 8 q-6 -6 -12 0" fill="#fff" stroke="#0b2340" stroke-width="1.5" stroke-linecap="round"/>
-          <ellipse cx="32" cy="38" rx="18" ry="14" fill="#fff" stroke="#0b2340" stroke-width="1.5"/>
-          <circle cx="26" cy="34" r="3.2" fill="#0b2340"/>
-          <circle cx="38" cy="34" r="3.2" fill="#0b2340"/>
-          <circle cx="22" cy="38" r="2.6" fill="#ffdede" opacity="0.9"/>
-          <circle cx="42" cy="38" r="2.6" fill="#ffdede" opacity="0.9"/>
-          <path id="bunnyMouth" d="M28 44 q4 4 8 0" stroke="#0b2340" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-        </svg>
-      </div>
-      <div class="titleWrap">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div>
         <h1>🩺 건강 위험도 자가진단 START</h1>
         <p class="lead">총 11문항 설문 후 요약 및 상세 리포트를 제공합니다.</p>
+      </div>
+      <div style="margin-bottom: 12px; text-align: center;">
+      <button class="btn secondary no-print" onclick="viewLeaderboardFromStart()">
+        🏆 랭킹 보기
+      </button>
+    </div>
+    
+    <div class="progress"><i id="progressBar"></i></div>
+
+    <form id="surveyForm" onsubmit="return false">
+      <div style="text-align:right">
+        <div class="mascot" id="mascotSmall" title="건강 토끼">
+          <!-- UPDATED: cuter flat rabbit face -->
+          <svg id="mascotSmallSvg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="rabbit">
+            <rect width="64" height="64" rx="12" fill="#ffffff"/>
+            <!-- ears -->
+            <path d="M20 8 q6 -6 12 0" fill="#fff" stroke="#0b2340" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M44 8 q-6 -6 -12 0" fill="#fff" stroke="#0b2340" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- rounded face, friendly eyes -->
+            <ellipse cx="32" cy="38" rx="18" ry="14" fill="#fff" stroke="#0b2340" stroke-width="1.5"/>
+            <circle cx="26" cy="34" r="3.2" fill="#0b2340"/>
+            <circle cx="38" cy="34" r="3.2" fill="#0b2340"/>
+            <!-- blushing cheeks -->
+            <circle cx="22" cy="38" r="2.6" fill="#ffdede" opacity="0.9"/>
+            <circle cx="42" cy="38" r="2.6" fill="#ffdede" opacity="0.9"/>
+            <!-- gentle smile -->
+            <path id="bunnyMouth" d="M28 44 q4 4 8 0" stroke="#0b2340" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="mascotCaption" id="mascotCaption">제가 결과에 따라 표정을 바꿀 거예요! 🐰</div>
       </div>
     </div>
 
     <div class="progress"><i id="progressBar"></i></div>
 
     <form id="surveyForm" onsubmit="return false">
-      <div class="slides" id="slidesWrapper">
+      <!-- IDENT -->
+      <div class="question active" data-step="0" id="step0">
+        <label class="block">이름 <span class="small" style="font-weight:600;color:var(--muted)">(필수)</span></label>
+        <input type="text" id="name" placeholder="예: 모이" />
+        <div class="invalid-note" id="note-step0" style="display:none">이름을 입력해주세요.</div>
+        <div class="pager"><div class="meta">질문 1 / 11</div><div style="text-align:right"><button class="btn no-print" type="button" onclick="nextStep()">시작 →</button></div></div>
+      </div>
 
-        <!-- STEP 0 -->
-        <div class="question active" data-step="0" id="step0">
-          <label class="block">이름 <span class="small" style="font-weight:600;color:var(--muted)">(필수)</span></label>
-          <input type="text" id="name" placeholder="예: 모이" />
-          <div class="invalid-note" id="note-step0" style="display:none">이름을 입력해주세요.</div>
-          <div class="pager">
-            <div class="meta">질문 1 / 11</div>
-            <div style="text-align:right">
-              <button class="btn no-print" type="button" onclick="nextStep()">시작 →</button>
-              <button class="btn secondary no-print" type="button" onclick="viewLeaderboardFromStart()">🏆 랭킹 보기</button>
-            </div>
-          </div>
+      <!-- DEMO -->
+      <div class="question" data-step="1" id="step1">
+        <div class="row">
+          <div style="flex:1"><label class="block">연령(만) <span class="small">(필수)</span></label><input type="number" id="age" min="1" max="150" /></div>
+          <div style="width:160px"><label class="block">성별 <span class="small">(필수)</span></label><select id="gender"><option value="">선택</option><option value="male">남성</option><option value="female">여성</option><option value="na">밝히고 싶지 않음</option></select></div>
         </div>
+        <div class="invalid-note" id="note-step1" style="display:none">연령과 성별을 모두 선택해주세요.</div>
+        <div class="pager"><div class="meta">질문 2 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
 
-        <!-- STEP 1 -->
-        <div class="question" data-step="1" id="step1">
-          <div class="row">
-            <div style="flex:1"><label class="block">연령(만) <span class="small">(필수)</span></label><input type="number" id="age" min="1" max="150" /></div>
-            <div style="width:160px"><label class="block">성별 <span class="small">(필수)</span></label><select id="gender"><option value="">선택</option><option value="male">남성</option><option value="female">여성</option><option value="na">밝히고 싶지 않음</option></select></div>
-          </div>
-          <div class="invalid-note" id="note-step1" style="display:none">연령과 성별을 모두 선택해주세요.</div>
-          <div class="pager"><div class="meta">질문 2 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
-        </div>
-
-        <!-- STEP 2 -->
-        <div class="question" data-step="2" id="step2">
-          <div class="grid2"><div><label class="block">키 (cm) <span class="small">(필수)</span></label><input type="number" id="height" placeholder="예: 170"></div><div><label class="block">체중 (kg) <span class="small">(필수)</span></label><input type="number" id="weight" placeholder="예: 64"></div></div>
-          <p id="bmiText" class="muted" style="margin-top:8px"></p>
-          <div class="invalid-note" id="note-step2" style="display:none">키와 체중을 정확히 입력해주세요.</div>
-          <div class="pager"><div class="meta">질문 3 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="handleBMIandNext()">계산 후 다음</button></div></div>
-        </div>
-
-        <!-- STEP 3 (Family History) -->
-        <div class="question" data-step="3" id="step3">
-          <label class="block">가족력(직계 가족 - 해당 시 체크)</label>
-          <div id="familyRow" style="margin-bottom: 15px;">
-            <div style="margin-bottom:10px">
-              <label><input type="checkbox" name="family" value="cardio_metabolic_group" onclick="handleGroupSelect(this, ['family_sub_chd','family_sub_stroke','family_sub_hypertension','family_sub_hyperlipidemia']); handleFamilyExclusion(this);"> 심혈관/대사 질환</label>
-              <span class="severity small" style="margin-left: 15px;">
-                <label class="small"><input type="checkbox" name="family_sub_chd" value="chd" onchange="syncParent('cardio_metabolic_group', this)"> 관상동맥질환</label>
-                <label class="small"><input type="checkbox" name="family_sub_stroke" value="stroke" onchange="syncParent('cardio_metabolic_group', this)"> 뇌졸중</label>
-                <label class="small"><input type="checkbox" name="family_sub_hypertension" value="hypertension" onchange="syncParent('cardio_metabolic_group', this)"> 고혈압</label>
-                <label class="small"><input type="checkbox" name="family_sub_hyperlipidemia" value="hyperlipidemia" onchange="syncParent('cardio_metabolic_group', this)"> 이상지질혈증</label>
-              </span>
-            </div>
-
-            <div style="margin-bottom:10px"><label><input type="checkbox" name="family" value="diabetes" onchange="handleFamilyExclusion(this)"> 제2형 당뇨병</label></div>
-
-            <div style="margin-bottom:10px">
-              <label><input type="checkbox" name="family" value="cancer_group" onclick="handleGroupSelect(this, ['family_sub_colon','family_sub_breast','family_sub_gastric','family_sub_liver']); handleFamilyExclusion(this);"> 암</label>
-              <span class="severity small" style="margin-left: 15px;">
-                <label class="small"><input type="checkbox" name="family_sub_colon" value="colon_cancer" onchange="syncParent('cancer_group', this)"> 대장암</label>
-                <label class="small"><input type="checkbox" name="family_sub_breast" value="breast_cancer" onchange="syncParent('cancer_group', this)"> 유방암</label>
-                <label class="small"><input type="checkbox" name="family_sub_gastric" value="gastric_cancer" onchange="syncParent('cancer_group', this)"> 위암</label>
-                <label class="small"><input type="checkbox" name="family_sub_liver" value="liver_cancer" onchange="syncParent('cancer_group', this)"> 간암</label>
-              </span>
-            </div>
-
-            <div style="margin-bottom:10px">
-              <label><input type="checkbox" name="family" value="other_group" onclick="handleGroupSelect(this, ['family_sub_obesity','family_sub_depression','family_sub_autoimmune']); handleFamilyExclusion(this);"> 기타 질환</label>
-              <span class="severity small" style="margin-left: 15px;">
-                <label class="small"><input type="checkbox" name="family_sub_obesity" value="obesity" onchange="syncParent('other_group', this)"> 중증 비만</label>
-                <label class="small"><input type="checkbox" name="family_sub_depression" value="depression" onchange="syncParent('other_group', this)"> 우울증/정신건강질환</label>
-                <label class="small"><input type="checkbox" name="family_sub_autoimmune" value="autoimmune" onchange="syncParent('other_group', this)"> 자가면역질환</label>
-              </span>
-            </div>
-
-            <div style="margin-top:12px"><label><input type="checkbox" name="family" value="none" onchange="handleFamilyExclusion(this)"> 해당 없음</label></div>
-          </div>
-
-          <label class="block">기타(선택)</label><input type="text" id="family_other" placeholder="예: 특정 희귀질환 등">
-          <div class="pager"><div class="meta">질문 4 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
-        </div>
-
-        <!-- STEP 4: Personal history -->
-        <div class="question" data-step="4" id="step4">
-          <label class="block">본인 병력(과거/현재) - 해당 시 체크 (복수 선택 가능). 해당할 경우 항목에서 심각도를 선택하세요.</label>
-
+      <!-- BMI -->
+      <div class="question" data-step="2" id="step2">
+        <div class="grid2"><div><label class="block">키 (cm) <span class="small">(필수)</span></label><input type="number" id="height" placeholder="예: 170"></div><div><label class="block">체중 (kg) <span class="small">(필수)</span></label><input type="number" id="weight" placeholder="예: 64"></div></div>
+        <p id="bmiText" class="muted" style="margin-top:8px"></p>
+        <div class="invalid-note" id="note-step2" style="display:none">키와 체중을 정확히 입력해주세요.</div>
+        <div class="pager"><div class="meta">질문 3 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="handleBMIandNext()">계산 후 다음</button></div></div>
+      </div>
+      
+      <!-- Family History -->
+<div class="question" data-step="3" id="step3">
+        
+        <label class="block">가족력(직계 가족 - 해당 시 체크)</label>
+        
+        <div id="familyRow" style="margin-bottom: 15px;">
+          
           <div style="margin-bottom:10px">
-            <label><input type="checkbox" name="history" value="diabetes" onchange="handleHistoryExclusion(this)"> 당뇨</label>
-            <span class="severity small">심각도:
-              <label class="small"><input type="checkbox" name="sev_diabetes" value="mild" onchange="onlyOne('sev_diabetes', this); handleHistoryExclusion(this);"> 경증</label>
-              <label class="small"><input type="checkbox" name="sev_diabetes" value="mod" onchange="onlyOne('sev_diabetes', this); handleHistoryExclusion(this);"> 중증</label>
-              <label class="small"><input type="checkbox" name="sev_diabetes" value="severe" onchange="onlyOne('sev_diabetes', this); handleHistoryExclusion(this);"> 심각</label>
+            <label><input type="checkbox" name="family" value="cardio_metabolic_group" 
+                          onclick="handleGroupSelect(this, ['family_sub_chd', 'family_sub_stroke', 'family_sub_hypertension', 'family_sub_hyperlipidemia']); handleFamilyExclusion(this);"> 
+              심혈관/대사 질환</label>
+            <span class="severity small" style="margin-left: 15px;">세부 항목:
+              <label class="small"><input type="checkbox" name="family_sub_chd" value="chd" onchange="this.closest('#familyRow').querySelector('input[value=\'cardio_metabolic_group\']').checked=this.checked; handleFamilyExclusion(this);"> 관상동맥질환</label>
+              <label class="small"><input type="checkbox" name="family_sub_stroke" value="stroke" onchange="this.closest('#familyRow').querySelector('input[value=\'cardio_metabolic_group\']').checked=this.checked; handleFamilyExclusion(this);"> 뇌졸중</label>
+              <label class="small"><input type="checkbox" name="family_sub_hypertension" value="hypertension" onchange="this.closest('#familyRow').querySelector('input[value=\'cardio_metabolic_group\']').checked=this.checked; handleFamilyExclusion(this);"> 고혈압</label>
+              <label class="small"><input type="checkbox" name="family_sub_hyperlipidemia" value="hyperlipidemia" onchange="this.closest('#familyRow').querySelector('input[value=\'cardio_metabolic_group\']').checked=this.checked; handleFamilyExclusion(this);"> 이상지질혈증</label>
             </span>
           </div>
 
           <div style="margin-bottom:10px">
-            <label><input type="checkbox" name="history" value="hypertension" onchange="handleHistoryExclusion(this)"> 고혈압</label>
-            <span class="severity small">심각도:
-              <label class="small"><input type="checkbox" name="sev_hypertension" value="mild" onchange="onlyOne('sev_hypertension', this); handleHistoryExclusion(this);"> 경증</label>
-              <label class="small"><input type="checkbox" name="sev_hypertension" value="mod" onchange="onlyOne('sev_hypertension', this); handleHistoryExclusion(this);"> 중증</label>
-              <label class="small"><input type="checkbox" name="sev_hypertension" value="severe" onchange="onlyOne('sev_hypertension', this); handleHistoryExclusion(this);"> 심각</label>
+            <label><input type="checkbox" name="family" value="diabetes" onchange="handleFamilyExclusion(this)"> 제2형 당뇨병</label>
+          </div>
+
+          <div style="margin-bottom:10px">
+            <label><input type="checkbox" name="family" value="cancer_group" 
+                          onclick="handleGroupSelect(this, ['family_sub_colon', 'family_sub_breast', 'family_sub_gastric', 'family_sub_liver']); handleFamilyExclusion(this);"> 
+              암 </label>
+            <span class="severity small" style="margin-left: 15px;">세부 항목:
+              <label class="small"><input type="checkbox" name="family_sub_colon" value="colon_cancer" onchange="this.closest('#familyRow').querySelector('input[value=\'cancer_group\']').checked=this.checked; handleFamilyExclusion(this);"> 대장암</label>
+              <label class="small"><input type="checkbox" name="family_sub_breast" value="breast_cancer" onchange="this.closest('#familyRow').querySelector('input[value=\'cancer_group\']').checked=this.checked; handleFamilyExclusion(this);"> 유방암</label>
+              <label class="small"><input type="checkbox" name="family_sub_gastric" value="gastric_cancer" onchange="this.closest('#familyRow').querySelector('input[value=\'cancer_group\']').checked=this.checked; handleFamilyExclusion(this);"> 위암</label>
+              <label class="small"><input type="checkbox" name="family_sub_liver" value="liver_cancer" onchange="this.closest('#familyRow').querySelector('input[value=\'cancer_group\']').checked=this.checked; handleFamilyExclusion(this);"> 간암</label>
             </span>
           </div>
 
           <div style="margin-bottom:10px">
-            <label><input type="checkbox" name="history" value="dyslipidemia" onchange="handleHistoryExclusion(this)"> 고지혈증</label>
-            <span class="severity small">심각도:
-              <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="mild" onchange="onlyOne('sev_dyslipidemia', this); handleHistoryExclusion(this);"> 경증</label>
-              <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="mod" onchange="onlyOne('sev_dyslipidemia', this); handleHistoryExclusion(this);"> 중증</label>
-              <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="severe" onchange="onlyOne('sev_dyslipidemia', this); handleHistoryExclusion(this);"> 심각</label>
+            <label><input type="checkbox" name="family" value="other_group" 
+                          onclick="handleGroupSelect(this, ['family_sub_obesity', 'family_sub_depression', 'family_sub_autoimmune']); handleFamilyExclusion(this);"> 
+              기타 질환</label>
+            <span class="severity small" style="margin-left: 15px;">세부 항목:
+              <label class="small"><input type="checkbox" name="family_sub_obesity" value="obesity" onchange="this.closest('#familyRow').querySelector('input[value=\'other_group\']').checked=this.checked; handleFamilyExclusion(this);"> 중증 비만</label>
+              <label class="small"><input type="checkbox" name="family_sub_depression" value="depression" onchange="this.closest('#familyRow').querySelector('input[value=\'other_group\']').checked=this.checked; handleFamilyExclusion(this);"> 우울증/정신건강질환</label>
+              <label class="small"><input type="checkbox" name="family_sub_autoimmune" value="autoimmune" onchange="this.closest('#familyRow').querySelector('input[value=\'other_group\']').checked=this.checked; handleFamilyExclusion(this);"> 자가면역질환</label>
             </span>
           </div>
 
-          <div style="margin-bottom:10px">
-            <label><input type="checkbox" name="history" value="cvd" onchange="handleHistoryExclusion(this)"> 심혈관질환(심근경색/뇌졸중)</label>
-            <span class="severity small">심각도:
-              <label class="small"><input type="checkbox" name="sev_cvd" value="mild" onchange="onlyOne('sev_cvd', this); handleHistoryExclusion(this);"> 경증</label>
-              <label class="small"><input type="checkbox" name="sev_cvd" value="mod" onchange="onlyOne('sev_cvd', this); handleHistoryExclusion(this);"> 중증</label>
-              <label class="small"><input type="checkbox" name="sev_cvd" value="severe" onchange="onlyOne('sev_cvd', this); handleHistoryExclusion(this);"> 심각</label>
-            </span>
+          <div style="margin-top: 12px;">
+            <label><input type="checkbox" name="family" value="none" onchange="handleFamilyExclusion(this)"> 해당 없음</label>
+          </div>
+        </div>
+        
+        <label class="block">기타(선택)</label><input type="text" id="family_other" placeholder="예: 특정 희귀질환 등">
+        
+        <div class="pager"><div class="meta">질문 4 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
+
+        <!-- PERSONAL HISTORY -->
+      <div class="question" data-step="4" id="step4">
+        <label class="block">본인 병력(과거/현재) - 해당 시 체크 (복수 선택 가능). 해당할 경우 항목에서 심각도를 선택하세요.</label>
+
+        <div style="margin-bottom:10px">
+          <label><input type="checkbox" name="history" value="diabetes" onchange="handleHistoryExclusion(this)"> 당뇨</label>
+          <span class="severity small">심각도:
+            <label class="small"><input type="checkbox" name="sev_diabetes" value="mild" onchange="onlyOne('sev_diabetes', this); handleHistoryExclusion(this);"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_diabetes" value="mod" onchange="onlyOne('sev_diabetes', this); handleHistoryExclusion(this);"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_diabetes" value="severe" onchange="onlyOne('sev_diabetes', this); handleHistoryExclusion(this);"> 심각</label>
+          </span>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label><input type="checkbox" name="history" value="hypertension" onchange="handleHistoryExclusion(this)"> 고혈압</label>
+          <span class="severity small">심각도:
+            <label class="small"><input type="checkbox" name="sev_hypertension" value="mild" onchange="onlyOne('sev_hypertension', this); handleHistoryExclusion(this);"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_hypertension" value="mod" onchange="onlyOne('sev_hypertension', this); handleHistoryExclusion(this);"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_hypertension" value="severe" onchange="onlyOne('sev_hypertension', this); handleHistoryExclusion(this);"> 심각</label>
+          </span>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label><input type="checkbox" name="history" value="dyslipidemia" onchange="handleHistoryExclusion(this)"> 고지혈증</label>
+          <span class="severity small">심각도:
+            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="mild" onchange="onlyOne('sev_dyslipidemia', this); handleHistoryExclusion(this);"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="mod" onchange="onlyOne('sev_dyslipidemia', this); handleHistoryExclusion(this);"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_dyslipidemia" value="severe" onchange="onlyOne('sev_dyslipidemia', this); handleHistoryExclusion(this);"> 심각</label>
+          </span>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label><input type="checkbox" name="history" value="cvd" onchange="handleHistoryExclusion(this)"> 심혈관질환(심근경색/뇌졸중)</label>
+          <span class="severity small">심각도:
+            <label class="small"><input type="checkbox" name="sev_cvd" value="mild" onchange="onlyOne('sev_cvd', this); handleHistoryExclusion(this);"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_cvd" value="mod" onchange="onlyOne('sev_cvd', this); handleHistoryExclusion(this);"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_cvd" value="severe" onchange="onlyOne('sev_cvd', this); handleHistoryExclusion(this);"> 심각</label>
+          </span>
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label><input type="checkbox" name="history" value="cancer" onchange="handleHistoryExclusion(this)"> 암</label>
+          <span class="severity small">심각도:
+            <label class="small"><input type="checkbox" name="sev_cancer" value="mild" onchange="onlyOne('sev_cancer', this); handleHistoryExclusion(this);"> 경증</label>
+            <label class="small"><input type="checkbox" name="sev_cancer" value="mod" onchange="onlyOne('sev_cancer', this); handleHistoryExclusion(this);"> 중증</label>
+            <label class="small"><input type="checkbox" name="sev_cancer" value="severe" onchange="onlyOne('sev_cancer', this); handleHistoryExclusion(this);"> 심각</label>
+          </span>
+        </div>
+
+        <div style="margin-bottom:6px"><label><input type="checkbox" name="history" value="none" onchange="handleHistoryExclusion(this)"> 해당 없음</label></div>
+
+        <label class="block">기타(선택)</label><input type="text" id="history_other" placeholder="예: 수술력, 만성질환 등">
+        <div class="pager"><div class="meta">질문 5 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
+
+      <!-- SMOKING -->
+      <div class="question" data-step="5" id="step5">
+        <label class="block">흡연 상태 <span class="small">(필수)</span></label>
+        <select id="smoke_status" onchange="updateSmokeDetails()">
+          <option value="">선택</option><option value="never">비흡연</option><option value="former">과거 흡연</option><option value="current">현재 흡연</option>
+        </select>
+        <div id="smoke_details" style="margin-top:12px;display:none">
+          <label class="block">흡연 종류(중복 선택 가능)</label>
+          <div class="checkbox-row">
+            <label class="checkbtn"><input type="checkbox" id="smoke_cig"> 일반담배(연초)</label>
+            <label class="checkbtn"><input type="checkbox" id="smoke_elec"> 전자담배(액상/가열담배)</label>
+            <label class="checkbtn"><input type="checkbox" id="smoke_huk"> 궐련형 전자담배</label>
           </div>
 
-          <div style="margin-bottom:10px">
-            <label><input type="checkbox" name="history" value="cancer" onchange="handleHistoryExclusion(this)"> 암</label>
-            <span class="severity small">심각도:
-              <label class="small"><input type="checkbox" name="sev_cancer" value="mild" onchange="onlyOne('sev_cancer', this); handleHistoryExclusion(this);"> 경증</label>
-              <label class="small"><input type="checkbox" name="sev_cancer" value="mod" onchange="onlyOne('sev_cancer', this); handleHistoryExclusion(this);"> 중증</label>
-              <label class="small"><input type="checkbox" name="sev_cancer" value="severe" onchange="onlyOne('sev_cancer', this); handleHistoryExclusion(this);"> 심각</label>
-            </span>
-          </div>
+          <label class="block">흡연 기간</label>
+          <select id="smoke_duration"><option value="0">6개월 미만</option><option value="1">6개월~1년</option><option value="2">1년~3년</option><option value="3">3년~5년</option><option value="4">5년 이상</option></select>
 
-          <div style="margin-bottom:6px"><label><input type="checkbox" name="history" value="none" onchange="handleHistoryExclusion(this)"> 해당 없음</label></div>
+          <label class="block">일일 흡연량(또는 병 수)</label>
+          <select id="smoke_amount"><option value="0">적음 (예:<5/일)</option><option value="1">보통 (5~15/일)</option><option value="2">많음 (16+/일)</option></select>
 
-          <label class="block">기타(선택)</label><input type="text" id="history_other" placeholder="예: 수술력, 만성질환 등">
-          <div class="pager"><div class="meta">질문 5 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+          <label class="block small">(과거 흡연자) 과거 평균 흡연량</label>
+          <select id="smoke_past_amount"><option value="0">해당없음/기억안남</option><option value="1">적음</option><option value="2">보통</option><option value="3">많음</option></select>
         </div>
 
-        <!-- STEP 5: Smoking -->
-        <div class="question" data-step="5" id="step5">
-          <label class="block">흡연 상태 <span class="small">(필수)</span></label>
-          <select id="smoke_status" onchange="updateSmokeDetails()">
-            <option value="">선택</option><option value="never">비흡연</option><option value="former">과거 흡연</option><option value="current">현재 흡연</option>
-          </select>
-          <div id="smoke_details" style="margin-top:12px;display:none">
-            <label class="block">흡연 종류(중복 선택 가능)</label>
-            <div class="checkbox-row">
-              <label class="checkbtn"><input type="checkbox" id="smoke_cig"> 일반담배(연초)</label>
-              <label class="checkbtn"><input type="checkbox" id="smoke_elec"> 전자담배(액상/가열담배)</label>
-              <label class="checkbtn"><input type="checkbox" id="smoke_huk"> 궐련형 전자담배</label>
-            </div>
+        <div class="invalid-note" id="note-step5" style="display:none">흡연 상태를 선택해주세요.</div>
+        <div class="pager"><div class="meta">질문 6 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
 
-            <label class="block">흡연 기간</label>
-            <select id="smoke_duration"><option value="0">6개월 미만</option><option value="1">6개월~1년</option><option value="2">1년~3년</option><option value="3">3년~5년</option><option value="4">5년 이상</option></select>
-
-            <label class="block">일일 흡연량(또는 병 수)</label>
-            <select id="smoke_amount"><option value="0">적음 (예:<5/일)</option><option value="1">보통 (5~15/일)</option><option value="2">많음 (16+/일)</option></select>
-
-            <label class="block small">(과거 흡연자) 과거 평균 흡연량</label>
-            <select id="smoke_past_amount"><option value="0">해당없음/기억안남</option><option value="1">적음</option><option value="2">보통</option><option value="3">많음</option></select>
-          </div>
-
-          <div class="invalid-note" id="note-step5" style="display:none">흡연 상태를 선택해주세요.</div>
-          <div class="pager"><div class="meta">질문 6 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      <!-- ALCOHOL -->
+      <div class="question" data-step="6" id="step6">
+        <label class="block">음주 빈도(지난 1개월 기준) <span class="small">(필수)</span></label>
+        <select id="alcohol_freq" onchange="updateDrinkDetails()"><option value="0">전혀 마시지 않음</option><option value="1">월 1~3회</option><option value="2">주 1~2회</option><option value="3">주 3회 이상</option></select>
+        <div id="drink_details" style="display:none;margin-top:10px">
+          <label class="block">한 번에 마시는 양(소주 기준)</label>
+          <select id="alcohol_amount"><option value="0">1병 미만</option><option value="1">1~2병</option><option value="2">2병 이상</option></select>
+          <label class="block">폭음(한 번에 과다 섭취) 경험(지난 1개월)</label>
+          <select id="binge"><option value="0">없음</option><option value="1">1회</option><option value="2">2~3회</option><option value="3">4회 이상</option></select>
         </div>
+        <div class="pager"><div class="meta">질문 7 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
 
-        <!-- STEP 6: Alcohol -->
-        <div class="question" data-step="6" id="step6">
-          <label class="block">음주 빈도(지난 1개월 기준) <span class="small">(필수)</span></label>
-          <select id="alcohol_freq" onchange="updateDrinkDetails()"><option value="0">전혀 마시지 않음</option><option value="1">월 1~3회</option><option value="2">주 1~2회</option><option value="3">주 3회 이상</option></select>
-          <div id="drink_details" style="display:none;margin-top:10px">
-            <label class="block">한 번에 마시는 양(소주 기준)</label>
-            <select id="alcohol_amount"><option value="0">1병 미만</option><option value="1">1~2병</option><option value="2">2병 이상</option></select>
-            <label class="block">폭음(한 번에 과다 섭취) 경험(지난 1개월)</label>
-            <select id="binge"><option value="0">없음</option><option value="1">1회</option><option value="2">2~3회</option><option value="3">4회 이상</option></select>
-          </div>
-          <div class="pager"><div class="meta">질문 7 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
-        </div>
+      <!-- PHYSICAL ACTIVITY -->
+      <div class="question" data-step="7" id="step7">
+        <label class="block">주당 격한 신체 활동(운동) 시간</label>
+        <select id="physical_minutes"><option value="0">0분</option><option value="1">1~60분</option><option value="2">61~150분</option><option value="3">151분 이상</option></select>
+        <label class="block">주당 근력 운동 횟수</label>
+        <select id="strength_days"><option value="0">0회</option><option value="1">1회</option><option value="2">2회</option><option value="3">3회 이상</option></select>
+        <div class="pager"><div class="meta">질문 8 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
 
-        <!-- STEP 7: Physical -->
-        <div class="question" data-step="7" id="step7">
-          <label class="block">주당 격한 신체 활동(운동) 시간</label>
-          <select id="physical_minutes"><option value="0">0분</option><option value="1">1~60분</option><option value="2">61~150분</option><option value="3">151분 이상</option></select>
-          <label class="block">주당 근력 운동 횟수</label>
-          <select id="strength_days"><option value="0">0회</option><option value="1">1회</option><option value="2">2회</option><option value="3">3회 이상</option></select>
-          <div class="pager"><div class="meta">질문 8 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
-        </div>
+      <!-- DIET DETAILS -->
+      <div class="question" data-step="8" id="step8">
+        <label class="block">물 섭취량(하루)</label>
+        <select id="water_intake"><option value="0">500ml 미만</option><option value="1">500ml~1L</option><option value="2">1~2L</option><option value="3">2L 이상</option></select>
 
-        <!-- STEP 8: Diet -->
-        <div class="question" data-step="8" id="step8">
-          <label class="block">물 섭취량(하루)</label>
-          <select id="water_intake"><option value="0">500ml 미만</option><option value="1">500ml~1L</option><option value="2">1~2L</option><option value="3">2L 이상</option></select>
+        <label class="block">가공식(인스턴트/패스트푸드) 주간 섭취 빈도</label>
+        <select id="instant_freq"><option value="3">거의 안 먹음</option><option value="2">주 1~2회</option><option value="1">주 3~4회</option><option value="0">주 5회 이상</option></select>
 
-          <label class="block">가공식(인스턴트/패스트푸드) 주간 섭취 빈도</label>
-          <select id="instant_freq"><option value="3">거의 안 먹음</option><option value="2">주 1~2회</option><option value="1">주 3~4회</option><option value="0">주 5회 이상</option></select>
+        <label class="block">채소/과일 섭취 횟수(하루)</label>
+        <select id="veg_freq"><option value="0">거의 안 먹음</option><option value="1">1회 미만</option><option value="2">1~2회</option><option value="3">3회 이상</option></select>
 
-          <label class="block">채소/과일 섭취 횟수(하루)</label>
-          <select id="veg_freq"><option value="0">거의 안 먹음</option><option value="1">1회 미만</option><option value="2">1~2회</option><option value="3">3회 이상</option></select>
+        <label class="block">당 섭취 수준(주관적)</label>
+        <select id="sugar"><option value="3">거의 없음</option><option value="2">적당</option><option value="1">많음</option><option value="0">매우 많음</option></select>
 
-          <label class="block">당 섭취 수준(주관적)</label>
-          <select id="sugar"><option value="3">거의 없음</option><option value="2">적당</option><option value="1">많음</option><option value="0">매우 많음</option></select>
+        <div class="pager"><div class="meta">질문 9 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
 
-          <div class="pager"><div class="meta">질문 9 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
-        </div>
+      <!-- SLEEP & MENTAL -->
+      <div class="question" data-step="9" id="step9">
+        <label class="block">평균 수면시간 <span class="small">(필수)</span></label>
+        <select id="sleep_hours"><option value="0">5시간 미만</option><option value="1">5~7시간</option><option value="2">7~9시간</option><option value="3">9시간 이상</option></select>
 
-        <!-- STEP 9: Sleep & Mental -->
-        <div class="question" data-step="9" id="step9">
-          <label class="block">평균 수면시간 <span class="small">(필수)</span></label>
-          <select id="sleep_hours"><option value="0">5시간 미만</option><option value="1">5~7시간</option><option value="2">7~9시간</option><option value="3">9시간 이상</option></select>
+        <label class="block">수면의 질(주관적) <span class="small">(필수)</span></label>
+        <select id="sleep_quality"><option value="2">좋음</option><option value="1">보통</option><option value="0">나쁨</option></select>
 
-          <label class="block">수면의 질(주관적) <span class="small">(필수)</span></label>
-          <select id="sleep_quality"><option value="2">좋음</option><option value="1">보통</option><option value="0">나쁨</option></select>
+        <label class="block">최근 2주간 우울/스트레스 빈도 <span class="small">(필수)</span></label>
+        <select id="mh_stress"><option value="2">거의 없음</option><option value="1">가끔</option><option value="0">자주</option></select>
 
-          <label class="block">최근 2주간 우울/스트레스 빈도 <span class="small">(필수)</span></label>
-          <select id="mh_stress"><option value="2">거의 없음</option><option value="1">가끔</option><option value="0">자주</option></select>
+        <label class="block">기타(선택) — 담당의에게 알릴 만한 증상</label>
+        <input type="text" id="mh_other" placeholder="예: 심한 불면, 식욕상실 등(선택)">
 
-          <label class="block">기타(선택) — 담당의에게 알릴 만한 증상</label>
-          <input type="text" id="mh_other" placeholder="예: 심한 불면, 식욕상실 등(선택)">
+        <div class="invalid-note" id="note-step9" style="display:none">수면·정신 항목을 선택해주세요.</div>
+        <div class="pager"><div class="meta">질문 10 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
 
-          <div class="invalid-note" id="note-step9" style="display:none">수면·정신 항목을 선택해주세요.</div>
-          <div class="pager"><div class="meta">질문 10 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
-        </div>
+      <!-- PREVENTION / SCREENING -->
+      <div class="question" data-step="10" id="step10">
+        <label class="block">최근 1년 내 정기검진 여부</label>
+        <select id="screening"><option value="1">예</option><option value="0">아니오</option></select>
 
-        <!-- STEP 10: Screening -->
-        <div class="question" data-step="10" id="step10">
-          <label class="block">최근 1년 내 정기검진 여부</label>
-          <select id="screening"><option value="1">예</option><option value="0">아니오</option></select>
+        <label class="block">건강보조제(비타민 등) 복용 중입니까?</label>
+        <select id="supplement" class="small"><option value="0">예</option><option value="1">아니오</option></select>
 
-          <label class="block">건강보조제(비타민 등) 복용 중입니까?</label>
-          <select id="supplement" class="small"><option value="0">예</option><option value="1">아니오</option></select>
+        <div class="pager"><div class="meta">질문 11 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
+      </div>
 
-          <div class="pager"><div class="meta">질문 11 / 11</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="nextStep()">다음</button></div></div>
-        </div>
+      <!-- FINAL CONFIRM -->
+      <div class="question" data-step="11" id="step11">
+        <label class="block">확인 후 결과 보기</label>
+        <div class="small">요약 보기를 누르시면 결과가 나옵니다.</div>
+        <div class="pager"><div class="meta">최종 점검</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="computeAndShowSummary()">요약 보기</button></div></div>
+      </div>
 
-        <!-- STEP 11: Final -->
-        <div class="question" data-step="11" id="step11">
-          <label class="block">확인 후 결과 보기</label>
-          <div class="small">요약 보기를 누르시면 결과가 나옵니다.</div>
-          <div class="pager"><div class="meta">최종 점검</div><div><button class="btn secondary no-print" type="button" onclick="prevStep()">이전</button><button class="btn no-print" type="button" onclick="computeAndShowSummary()">요약 보기</button></div></div>
-        </div>
-
-      </div><!-- slides end -->
     </form>
   </section>
 
@@ -415,7 +431,8 @@ select.small option { color: #0b2340 !important; }        /* option 내부 텍�
       </div>
       <div style="text-align:right">
         <div class="mascot" id="mascotLarge" style="width:92px;height:92px;border-radius:14px;background:#fff;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(2,8,23,0.18)">
-          <svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="rabbit-large">
+          <!-- larger cuter rabbit -->
+          <svg id="mascotLargeSvg" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="rabbit-large">
             <rect width="128" height="128" rx="18" fill="#fff"/>
             <ellipse cx="64" cy="78" rx="42" ry="32" fill="#fff" stroke="#0b2340" stroke-width="2"/>
             <circle cx="52" cy="68" r="6.5" fill="#0b2340"/>
@@ -427,11 +444,13 @@ select.small option { color: #0b2340 !important; }        /* option 내부 텍�
           </svg>
         </div>
         <div class="mascotCaption" style="margin-top:10px">야호 결과가 나왔어요~</div>
-        <div style="margin-top:8px"><button class="btn no-print" id="viewReportBtn">자세히 보기</button><button class="btn secondary no-print" onclick="startOver()" style="margin-left:8px">🔄 다시 하기</button></div>
+        <div style="margin-top:8px"><button class="btn no-print" id="viewReportBtn">자세히 보기</button>
+          <button class="btn secondary no-print" onclick="startOver()">🔄 다시 하기</button></div>
       </div>
     </div>
 
     <div style="margin-top:14px"><canvas id="summaryChart" width="600" height="260"></canvas></div>
+
     <div style="margin-top:12px" id="summaryItems"></div>
     <footer class="footer-note">자세한 권고는 상단의 '자세히 보기'를 눌러 확인하세요.</footer>
   </section>
@@ -445,16 +464,15 @@ select.small option { color: #0b2340 !important; }        /* option 내부 텍�
       </div>
       <div style="text-align:right">
         <button class="btn secondary no-print" onclick="backToSummary()">← 요약 보기</button>
-        <button class="btn primary" onclick="downloadFullReportPDF()">PDF 저장</button>
-
+        <button class="btn no-print" onclick="downloadPDF()">PDF 저장</button>
         <button class="btn secondary no-print" onclick="startOver()" style="margin-left: 8px;">🔄 다시 하기</button>
       </div>
     </div>
-
+    
     <div style="margin-top:12px" class="report-wrap">
         <canvas id="radarChart" width="600" height="160"></canvas>
     </div>
-    <div id="detailList" style="margin-top:12px"></div>
+    5<div id="detailList" style="margin-top:12px"></div>
     <div id="planSection" style="display:none;margin-top:12px" class="card">
       <h3 style="margin:0 0 8px;color:var(--accent)">📋 개인 맞춤 개선 플랜(추천 3개월)</h3>
       <div id="planContent"></div>
@@ -478,18 +496,8 @@ select.small option { color: #0b2340 !important; }        /* option 내부 텍�
 const steps = Array.from(document.querySelectorAll('.question'));
 const progressBar = document.getElementById('progressBar');
 let stepIndex = 0;
-const slidesWrapper = document.getElementById('slidesWrapper');
-
 function refreshProgress(){ const pct = Math.round(((stepIndex+1)/steps.length)*100); progressBar.style.width = pct + '%'; }
-function isSlideMode(){ return window.innerWidth >= 768; } // 🚨 768px 이상에서 항상 슬라이드 모드 활성화 (CSS와 일치)
-function showStep(i){
-  if(i<0) i=0; if(i>=steps.length) i=steps.length-1;
-  steps.forEach((s,idx)=> s.classList.toggle('active', idx===i));
-  stepIndex=i; refreshProgress();
-  
-  if(isSlideMode() && slidesWrapper){ slidesWrapper.style.transform = `translateX(-${i*100}%)`; }
-  // try{ steps[i].scrollTop = 0; }catch(e){} 🚨 이 코드는 삭제되어야 합니다.
-}
+function showStep(i){ steps.forEach((s,idx)=> s.classList.toggle('active', idx===i)); stepIndex=i; refreshProgress(); window.scrollTo({top:0,behavior:'smooth'}); }
 showStep(0);
 
 /* Required fields per step (IDs) */
@@ -551,13 +559,9 @@ function validateStep(i){
 }
 
 function nextStep(){
-    // 🚨 최종 수정: 유효성 검사 실패 시 경고가 표시될 시간을 준 후, 다음 프레임에서 showStep 실행
-    if(!validateStep(stepIndex)) return; 
-
-    // 유효성 검사를 통과했을 때만 애니메이션을 예약합니다.
-    window.requestAnimationFrame(() => {
-        if(stepIndex < steps.length-1) showStep(stepIndex+1);
-    });
+  // validate current
+  if(!validateStep(stepIndex)) return;
+  if(stepIndex < steps.length-1) showStep(stepIndex+1);
 }
 function prevStep(){ if(stepIndex > 0) showStep(stepIndex-1); }
 
@@ -567,8 +571,10 @@ function setupEnterNavigation(){
   interactive.forEach(el=>{
     el.addEventListener('keydown', (e)=>{
       if(e.key === 'Enter'){
+        // textarea allow Shift+Enter for newline
         if(el.tagName.toLowerCase() === 'textarea' && e.shiftKey) return;
         e.preventDefault();
+        // if current element belongs to a step, validate that step
         nextStep();
       }
     });
@@ -576,45 +582,50 @@ function setupEnterNavigation(){
 }
 setupEnterNavigation();
 
-/* sync group selects */
-function handleGroupSelect(groupCheckbox, childNames){
-  const checked = groupCheckbox.checked;
-  childNames.forEach(name=>{
-    const el = document.querySelector(`input[name="${name}"]`);
-    if(el) el.checked = checked;
+/* custom checkbtn toggles */
+document.querySelectorAll('.checkbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const inp = btn.querySelector('input');
+    if(!inp) return;
+    inp.checked = !inp.checked;
+    btn.classList.toggle('active', inp.checked);
+    // family 'none' exclusive behavior
+    if(inp.name==='family'){
+      if(inp.value==='none' && inp.checked){
+        document.querySelectorAll('input[name="family"]').forEach(i=>{
+          if(i.value!=='none'){ i.checked=false; if(i.closest('.checkbtn')) i.closest('.checkbtn').classList.remove('active'); }
+        });
+      } else if(inp.value!=='none' && inp.checked){
+        const none = document.querySelector('input[name="family"][value="none"]');
+        if(none){ none.checked=false; if(none.closest('.checkbtn')) none.closest('.checkbtn').classList.remove('active'); }
+      }
+    }
   });
-}
-function syncParent(parentValue, subCheckbox){
-  // set parent checked if any sub checked
-  const parent = document.querySelector(`input[name="family"][value="${parentValue}"]`);
-  if(!parent) return;
-  const siblings = subCheckbox.closest('#familyRow').querySelectorAll(`input[name^="family_sub_"], input[name^="family_sub"]`);
-  let any=false;
-  siblings.forEach(s=>{ if(s.checked) any=true; });
-  parent.checked = any;
-  handleFamilyExclusion(parent);
-}
-
-/* family none exclusivity */
-function handleFamilyExclusion(el){
-  if(el.value==='none' && el.checked){
-    document.querySelectorAll('input[name="family"]').forEach(i=>{
-      if(i.value!=='none'){ i.checked=false; }
-    });
-  } else if(el.value !== 'none' && el.checked){
-    const none = document.querySelector('input[name="family"][value="none"]');
-    if(none) none.checked=false;
-  }
-}
+});
 
 /* onlyOne severity */
-function onlyOne(name, checkbox){
-  const all = document.querySelectorAll(`input[name="${name}"]`);
-  const isChecked = checkbox.checked;
-  all.forEach(cb=>{ if(cb!==checkbox) cb.checked=false; });
-  const historyName = name.replace('sev_', '');
+function onlyOne(name, checkbox){ 
+  const all = document.querySelectorAll(`input[name="${name}"]`); 
+  const isChecked = checkbox.checked; // 현재 선택한 심각도 체크박스의 상태 (true/false)
+
+  // 1. 같은 그룹 내 다른 심각도 체크박스 해제 (기존 onlyOne 기능)
+  all.forEach(cb=>{ 
+    if(cb!==checkbox) cb.checked=false; 
+  }); 
+
+  // 2. 🚀 [추가된 로직] 해당 병력(history) 체크박스를 자동으로 선택합니다.
+  
+  // 'sev_diabetes'에서 'diabetes'만 추출
+  const historyName = name.replace('sev_', ''); 
+  // 해당 병력 체크박스 (name="history", value="diabetes" 등) 찾기
   const historyCheckbox = document.querySelector(`input[name="history"][value="${historyName}"]`);
-  if(historyCheckbox) historyCheckbox.checked = isChecked;
+
+  if(historyCheckbox){
+      // 심각도 옵션이 선택되었다면, 병명 체크박스도 선택합니다.
+      // (onlyOne 로직 덕분에 심각도가 해제될 때는 이 함수가 실행되지 않으므로, 
+      //  단순히 현재 상태(isChecked)를 따라가게 설정하면 됩니다.)
+      historyCheckbox.checked = isChecked;
+  }
 }
 
 /* dynamic show/hide smoking & drinking details */
@@ -622,16 +633,23 @@ function updateSmokeDetails(){ const st=document.getElementById('smoke_status').
 function updateDrinkDetails(){ const f=Number(document.getElementById('alcohol_freq').value||0); document.getElementById('drink_details').style.display=(f>0)?'block':'none'; }
 
 /* BMI calc */
-function handleBMIandNext(){ const h=Number(document.getElementById('height').value), w=Number(document.getElementById('weight').value); if(!h||!w){ q('height').classList.add('invalid'); q('weight').classList.add('invalid'); q('note-step2').style.display='block'; return; } const bmi = +(w/((h/100)**2)); document.getElementById('bmiText').innerText=`계산된 BMI: ${bmi.toFixed(1)} (${bmiCategory(bmi)})`; q('height').classList.remove('invalid'); q('weight').classList.remove('invalid'); q('note-step2').style.display='none'; nextStep(); }
+function handleBMIandNext(){ const h=Number(document.getElementById('height').value), w=Number(document.getElementById('weight').value); if(!h||!w){ // show invalid
+    q('height').classList.add('invalid'); q('weight').classList.add('invalid'); q('note-step2').style.display='block'; return; } const bmi = +(w/((h/100)**2)); document.getElementById('bmiText').innerText=`계산된 BMI: ${bmi.toFixed(1)} (${bmiCategory(bmi)})`; // clear any invalids
+  q('height').classList.remove('invalid'); q('weight').classList.remove('invalid'); q('note-step2').style.display='none'; nextStep(); }
 function bmiCategory(bmi){ if(bmi<18.5) return '저체중'; if(bmi<23) return '정상'; if(bmi<25) return '과체중'; if(bmi<30) return '비만'; return '고도비만'; }
 
-/* ====== Risk calculation (kept similar to original) ====== */
+/* ====== Risk calculation (evidence-aligned weights) ====== */
+/* weights consistent with prior design; family weights adjusted by evidence-based risk multipliers */
 const W = { bmi:0.11, family:0.12, history:0.13, smoke:0.16, drink:0.09, exercise:0.10, diet:0.15, sleep:0.07, stress:0.07 };
 
+/* compute summary */
 let lastResult = null;
 function computeAndShowSummary(){
+  // final validation of all required steps before computing
   for(const si of Object.keys(requiredFields)){
-    if(!validateStep(Number(si))){ showStep(Number(si)); return; }
+    if(!validateStep(Number(si))){
+      showStep(Number(si)); return;
+    }
   }
 
   const name = (q('name').value || '익명').trim();
@@ -640,7 +658,7 @@ function computeAndShowSummary(){
 
   const r = {};
   r.bmi = computeBMIRisk();
-  r.family = computeFamilyRisk();
+  r.family = computeFamilyRisk(); // 0..1
   r.history = computeHistoryRisk();
   r.smoke = computeSmokingRisk();
   r.drink = computeAlcoholRisk();
@@ -650,10 +668,11 @@ function computeAndShowSummary(){
   r.stress = computeStressRisk();
 
   let weighted = 0; for(const k in W) weighted += (W[k]||0)*(r[k]||0);
-  let score = Math.round((1-weighted)*100); score=Math.max(10,Math.min(100,score));
+  let score = Math.round((1-weighted)*100); score=Math.max(10,Math.min(100,score)); // floor 10
 
   const perItemScore = {}; for(const k in r) perItemScore[k]=Math.round((1-r[k])*100);
 
+  // label
   let shortLabel='', shortText='';
   if(score>=90){ shortLabel='매우 양호'; shortText=`${name}님, 전반적으로 양호합니다. 현재 습관을 유지하세요.`; }
   else if(score>=75){ shortLabel='양호'; shortText=`${name}님, 대체로 양호합니다. 일부 항목 개선 권장.`; }
@@ -661,21 +680,27 @@ function computeAndShowSummary(){
   else { shortLabel='고위험'; shortText=`${name}님, 위험 수준입니다. 전문가 상담을 권장합니다.`; }
 
   lastResult = { timestamp: Date.now(), name, age, gender, score, perItemScore, r, W };
-  try{ localStorage.setItem('lastResult', JSON.stringify(lastResult)); }catch(e){}
 
+  // persist last result for quick restore
+  try{ localStorage.setItem('lastResult', JSON.stringify(lastResult)); }catch(e){ console.warn('localStorage fail',e); }
+
+  // render summary
   q('summaryTitle').innerText = `요약 — ${name}님의 건강`;
   q('summaryText').innerText = `${shortLabel} • ${shortText} (총점: ${score}/100)`;
   renderSummaryChart(perItemScore);
   renderSummaryItems(perItemScore, r);
   updateMascot(score);
 
+  // wire detail
   q('viewReportBtn').onclick = ()=>{ showDetailedReport(lastResult); };
+
   q('surveyCard').style.display='none';
   q('summaryCard').style.display='block';
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-/* risk helpers */
+/* ========== risk functions (with clearer units + documented approximations) ========== */
+
 function computeBMIRisk(){
   const h=Number(q('height').value), w=Number(q('weight').value);
   if(!h||!w) return 0;
@@ -815,7 +840,7 @@ function renderSummaryItems(perItemScore, r){
   }
 }
 
-/* Detailed report & plan rendering */
+/* ========== Detailed report ========== */
 let radarChart = null;
 function showDetailedReport(result){
   document.getElementById('summaryCard').style.display='none';
@@ -835,6 +860,7 @@ function showDetailedReport(result){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+/* render details & plan */
 function renderDetails(perItemScore, r, ctxInfo){
   const container = document.getElementById('detailList'); container.innerHTML = '';
   function card(title,score,risk,advice,note=''){
@@ -918,13 +944,13 @@ function generatePlan(perItemScore, r, ctxInfo){
   else add('정신건강', ['양호 — 유지']);
 }
 
-/* History and localStorage */
+/* ===== History (localStorage): save lastResult + archive ===== */
 function saveSummaryToHistory(){
   if(!lastResult) return alert('먼저 요약을 생성하세요.');
   const hist = JSON.parse(localStorage.getItem('healthHistory')||'[]');
   hist.push(lastResult);
   try{ localStorage.setItem('healthHistory', JSON.stringify(hist)); localStorage.setItem('lastResult', JSON.stringify(lastResult)); }
-  catch(e){ alert('로컬 저장 실패: 브라우저 설정을 확인하세요.'); return; }
+  catch(e){ console.warn('LocalStorage save error', e); alert('로컬 저장 실패: 브라우저 설정을 확인하세요.'); return; }
   alert('요약 결과가 히스토리에 저장되었습니다.');
 }
 function toggleHistory(){
@@ -935,103 +961,109 @@ function toggleHistory(){
 function renderHistory(){
   const list = document.getElementById('historyList'); list.innerHTML='';
   const hist = JSON.parse(localStorage.getItem('healthHistory')||'[]').slice().reverse();
-  if(hist.length===0) { list.innerHTML='<div class="small">저장된 히스토리가 없습니다.</div>'; return; }
-  hist.forEach((h, idx)=>{
-    const el = document.createElement('div'); el.style.marginBottom='8px';
-    el.innerHTML = `<div style="font-weight:800">${h.name} • ${new Date(h.timestamp).toLocaleString()}</div><div class="small">총점: ${h.score}/100</div>`;
-    list.appendChild(el);
+  if(hist.length===0){ list.innerHTML='<div class="small">저장된 기록이 없습니다.</div>'; return; }
+  hist.forEach((h,idx)=>{
+    const row = document.createElement('div'); row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.padding='8px 6px'; row.style.borderBottom='1px solid #f1f6fb';
+    const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:700">${h.name||'익명'}</div><div class="small">${new Date(h.timestamp).toLocaleString()}</div><div class="small">총점: ${h.score}</div>`;
+    const right = document.createElement('div');
+    const loadBtn = document.createElement('button'); loadBtn.className='btn secondary no-print'; loadBtn.style.marginRight='8px'; loadBtn.textContent='불러오기';
+    loadBtn.onclick = ()=>{ showDetailedReport(h); };
+    const delBtn = document.createElement('button'); delBtn.className='btn secondary no-print'; delBtn.textContent='삭제';
+    delBtn.onclick = ()=>{ if(confirm('이 기록을 삭제하시겠습니까?')){ removeHistoryEntry(hist.length-1-idx); } };
+    right.appendChild(loadBtn); right.appendChild(delBtn);
+    row.appendChild(left); row.appendChild(right); list.appendChild(row);
   });
 }
-function clearHistory(){ if(confirm('모든 히스토리를 삭제하시겠습니까?')){ localStorage.removeItem('healthHistory'); renderHistory(); alert('삭제 완료'); }}
+function removeHistoryEntry(index){ const all = JSON.parse(localStorage.getItem('healthHistory')||'[]'); all.splice(index,1); localStorage.setItem('healthHistory', JSON.stringify(all)); renderHistory(); }
+function clearHistory(){ if(!confirm('히스토리를 모두 삭제하시겠습니까?')) return; localStorage.removeItem('healthHistory'); renderHistory(); }
 
-/* utility report controls */
-function backToSummary(){ document.getElementById('reportCard').style.display='none'; document.getElementById('summaryCard').style.display='block'; }
-function startOver(){ location.reload(); }
-
-/* simple mascot update */
-function updateMascot(score){
-  // change small mascot mouth curvature using transform on svg path (simple visual)
-  try{
-    const mouth = document.querySelector('#mascotSmall svg path#bunnyMouth') || document.querySelector('#mascotSmallSvg path#bunnyMouth');
-    if(mouth){
-      if(score>=80) mouth.setAttribute('d','M28 44 q4 8 8 0'); // big smile
-      else if(score>=50) mouth.setAttribute('d','M28 44 q4 4 8 0'); // gentle
-      else mouth.setAttribute('d','M28 48 q4 -2 8 0'); // worried
-    }
-  }catch(e){}
-}
-
-/* -------------------------------
-   1️⃣ 설문 카드 / 슬라이드 조정
----------------------------------*/
-function updateSlideTransform() {
-  const slidesWrapper = document.getElementById('slidesWrapper');
-  if(!slidesWrapper) return;
-  // slidesWrapper 너비는 steps.length * 100% 로 설정되어야 함
-  slidesWrapper.style.width = `${steps.length * 100}%`;
-  // 각 질문 항목 너비 100% / flex로 처리되어야 함 (이미 .question에 flex:0 0 100% 있음)
-  slidesWrapper.style.transform = `translateX(-${stepIndex * (100 / steps.length)}%)`;
-}
-window.addEventListener('resize', updateSlideTransform);
-window.addEventListener('load', updateSlideTransform);
-
-/* -------------------------------
-   2️⃣ 카드 화면 높이 고정 (iPad 세로형 포함)
----------------------------------*/
-function fixCardHeight() {
-  const cards = ['surveyCard','summaryCard','reportCard','rankingSection'];
-  cards.forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.style.minHeight = window.innerHeight + 'px';
-  });
-}
-window.addEventListener('resize', fixCardHeight);
-window.addEventListener('load', fixCardHeight);
-
-/* -------------------------------
-   3️⃣ PDF 생성 시 스케일 조정
----------------------------------*/
-async function downloadFullReportPDF() {
-  const reportEl = document.getElementById('reportSection');
-  const dpr = window.devicePixelRatio || 1;
+/* ===== PDF: fix clipping via canvas slicing (improved handling) ===== */
+async function downloadPDF(){
+  const el = document.getElementById('reportCard');
+  // 🚀 [추가] 히스토리 패널은 PDF에 불필요하므로 잠시 숨깁니다.
+  const historyPanel = document.getElementById('historyPanel');
+  const historyPanelOriginalDisplay = historyPanel.style.display;
+  historyPanel.style.display = 'none';
   
-  const canvas = await html2canvas(reportEl, {
-    scale: 2 * dpr,
-    useCORS: true,
-    scrollY: 0,
-    windowWidth: reportEl.scrollWidth,
-    windowHeight: reportEl.scrollHeight,
-    height: reportEl.scrollHeight
-  });
-  
+  // hide non-printable controls
+  const controls = document.querySelectorAll('.no-print'); controls.forEach(c=>c.style.display='none');
+
+  // ensure report is fully expanded (plan visible)
+  document.getElementById('planSection').style.display='block';
+
+  const scale = 2;
+  const canvas = await html2canvas(el, {scale:scale, useCORS:true, windowWidth:document.documentElement.scrollWidth, windowHeight:document.documentElement.scrollHeight});
   const imgData = canvas.toDataURL('image/png');
-  const pdf = new jsPDF('p','pt','a4');
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p','mm','a4');
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
+  // 🚀 여백을 0으로 완전 제거합니다.
+  const margin = 0; // 0mm 여백
+  const marginTotal = margin * 2; // 0mm
   
-  const imgWidth = pageWidth;
-  const imgHeight = canvas.height * (pageWidth / canvas.width);
+  const imgWidth = pageWidth - marginTotal; 
+  const imgHeight = canvas.height * imgWidth / canvas.width;
   
-  let position = 0;
-  while(position < imgHeight){
-    pdf.addImage(imgData, 'PNG', 0, -position, imgWidth, imgHeight);
-    position += pageHeight;
-    if(position < imgHeight) pdf.addPage();
+  // 🚀 여백 조정
+  if(imgHeight <= pageHeight - marginTotal){
+    pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+    pdf.save(`Health_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+    controls.forEach(c=>c.style.display='inline-block');
+    return;
   }
-  pdf.save('SurveyReport.pdf');
+  
+  // 🚀 슬라이싱 높이 계산 시 여백 조정
+  const pageHeightPx = Math.floor(canvas.width * (pageHeight - marginTotal) / imgWidth);
+  let y = 0;
+  while(y < canvas.height){
+    const slice = document.createElement('canvas');
+    slice.width = canvas.width;
+    slice.height = Math.min(pageHeightPx, canvas.height - y);
+    const ctx = slice.getContext('2d');
+    ctx.drawImage(canvas, 0, y, canvas.width, slice.height, 0, 0, canvas.width, slice.height);
+    const sliceData = slice.toDataURL('image/png');
+    const sliceImgHeight = slice.height * imgWidth / canvas.width;
+    
+    // 🚀 PDF 이미지 추가 시 여백 조정
+    pdf.addImage(sliceData, 'PNG', margin, margin, imgWidth, sliceImgHeight);
+    y += pageHeightPx;
+    if(y < canvas.height) pdf.addPage();
+  }
+  pdf.save(`Health_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+  controls.forEach(c=>c.style.display='inline-block');
 }
 
-/* -------------------------------
-   4️⃣ 차트 재렌더링 (iPad resize 대응)
----------------------------------*/
-window.addEventListener('resize', ()=>{
-  updateSlideTransform();
-  fixCardHeight();
-  if(summaryChart && lastResult) renderSummaryChart(lastResult.perItemScore);
-  if(radarChart && lastResult) showDetailedReport(lastResult);
-});
+/* Mascot update (flat mouth shapes) */
+function updateMascot(score){
+  const smallMouth = document.getElementById('bunnyMouth');
+  const largeMouth = document.getElementById('bunnyLargeMouth');
+  const mascotBg = document.getElementById('mascotSmall');
+  if(!smallMouth || !largeMouth) return;
+  if(score>=75){
+    smallMouth.setAttribute('d','M28 44 q4 6 8 0'); // smile
+    largeMouth.setAttribute('d','M56 92 q14 14 36 0');
+    mascotBg.style.background = '#ffffff';
+  } else if(score>=50){
+    smallMouth.setAttribute('d','M28 44 q4 2 8 0'); // neutral
+    largeMouth.setAttribute('d','M56 92 q14 6 36 0');
+    mascotBg.style.background = '#fffbe6';
+  } else {
+    smallMouth.setAttribute('d','M28 46 q4 -4 8 0'); // worried
+    largeMouth.setAttribute('d','M56 92 q14 -6 36 0');
+    mascotBg.style.background = '#fff0f0';
+  }
+}
 
-/* ranking placeholder */
+/* init: read last result existence (do not auto-show) */
+(function init(){
+  try{
+    const last = JSON.parse(localStorage.getItem('lastResult')||'null');
+    if(last) { /* available via history */ }
+  }catch(e){}
+})();
+
+
 /* ============================================================
   ✅ (추가 기능 2) 참여자 랭킹 (Leaderboard) + 관리자 기능 + PDF 수정
    ============================================================ */
@@ -1273,32 +1305,6 @@ function viewLeaderboardFromStart() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-
-/* PDF download (basic) */
-function downloadPDF(){
-  const node = document.getElementById('reportCard');
-  html2canvas(node, { scale: 1.2 }).then(canvas => {
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jspdf.jsPDF('p','mm','a4');
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save('health_report.pdf');
-  }).catch(e=>{ alert('PDF 생성 중 오류가 발생했습니다.'); console.error(e); });
-}
-
-/* initial responsive handler: ensure slide wrapper reset if resizing */
-
-
-window.addEventListener('resize', ()=>{
-  if(!slidesWrapper) return;
-  const cardWidth = slidesWrapper.parentElement.offsetWidth; // 부모 기준으로 너비 계산
-  slidesWrapper.style.transform = `translateX(-${stepIndex * cardWidth}px)`;
-});
-
-
-
 /* ============================================================
   🔐 관리자 모드 간편 초기화 (버튼 없음, 랭킹창 유지)
    ============================================================ */
@@ -1452,105 +1458,6 @@ function handleFamilyExclusion(checkbox) {
     }
   }
 }
-
-/* ✅ 아이패드 Safari 세로 모드 대응 - 동적 높이 자동 보정 (최종본) */
-function getViewportHeight() {
-  // iPad Safari의 실제 뷰포트 높이 계산 (키보드 고려)
-  const vv = window.visualViewport;
-  let h = vv ? vv.height : window.innerHeight;
-  if (h < 400) h = window.innerHeight; // 안전 최소 보정
-  return h;
-}
-
-function applyDynamicHeight() {
-  const card = document.getElementById('surveyCard');
-  const header = card?.querySelector('.headerRow');
-  const progress = card?.querySelector('.progress');
-  const form = document.getElementById('surveyForm');
-  const slides = document.getElementById('slidesWrapper');
-  if (!card || !header || !progress || !form || !slides) return;
-
-  const vh = getViewportHeight();
-  const style = window.getComputedStyle(card);
-  const cardPaddingTop = parseFloat(style.paddingTop);
-  const cardPaddingBottom = parseFloat(style.paddingBottom);
-  const fixedHeight = header.offsetHeight + progress.offsetHeight + cardPaddingTop + cardPaddingBottom;
-
-  const remainingHeight = vh - fixedHeight - 10; // 여유 10px
-  form.style.height = `${remainingHeight}px`;
-  slides.style.height = `${remainingHeight}px`;
-
-  // 각 질문 슬라이드 높이 동기화
-  slides.querySelectorAll('.question').forEach(q => {
-    q.style.height = `${remainingHeight}px`;
-  });
-
-  updateSlideTransform();
-}
-
-/* ✅ 슬라이드 위치 갱신 (퍼센트 기반으로 통일) */
-function updateSlideTransform() {
-  const slidesWrapper = document.getElementById('slidesWrapper');
-  if (!slidesWrapper) return;
-  const steps = slidesWrapper.querySelectorAll('.question');
-  slidesWrapper.style.width = `${steps.length * 100}%`;
-  slidesWrapper.style.transform = `translateX(-${stepIndex * (100 / steps.length)}%)`;
-}
-
-/* ✅ 포커스 시 자동 스크롤 보정 */
-function focusScrollFix(el) {
-  setTimeout(() => {
-    try {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    } catch(e) {}
-  }, 250);
-}
-
-function attachFocusHandlers() {
-  document.querySelectorAll('#slidesWrapper .question input, #slidesWrapper .question select, #slidesWrapper .question textarea').forEach(el => {
-    el.addEventListener('focus', () => {
-      const parentQ = el.closest('.question');
-      if (parentQ) focusScrollFix(parentQ);
-    });
-  });
-}
-
-/* ✅ 단계 이동 시 높이 및 포커스 보정 */
-function showStep(i) {
-  if (i < 0) i = 0;
-  if (i >= steps.length) i = steps.length - 1;
-  steps.forEach((s, idx) => s.classList.toggle('active', idx === i));
-  stepIndex = i;
-  refreshProgress();
-  updateSlideTransform();
-  applyDynamicHeight();
-  const active = steps[i];
-  const firstInput = active.querySelector('input, select, textarea');
-  if (firstInput) {
-    setTimeout(() => {
-      try {
-        firstInput.focus({ preventScroll: true });
-        focusScrollFix(active);
-      } catch(e) {}
-    }, 120);
-  }
-}
-
-/* ✅ visualViewport 변화 감지 */
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', applyDynamicHeight);
-  window.visualViewport.addEventListener('scroll', applyDynamicHeight);
-}
-
-/* ✅ 초기화 */
-window.addEventListener('load', () => {
-  applyDynamicHeight();
-  attachFocusHandlers();
-  showStep(0);
-});
-window.addEventListener('resize', applyDynamicHeight);
-</script>
-
 
 </script>
 </body>
