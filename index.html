@@ -51,13 +51,14 @@
   .checkbtn input{display:none}
   .checkbtn.active{background:var(--accent);color:white;box-shadow:0 8px 24px rgba(11,36,64,0.18)}
 
-  /* mascot: updated, cuter flat style */
+  /* mascot styles */
   .mascot{width:82px;height:82px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(2,8,23,0.18)}
   .mascot svg{width:64px;height:64px}
   .mascotCaption{margin-top:10px;font-size:13px;color:var(--muted);text-align:center}
 
   .pager{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:12px}
   .meta{font-size:13px;color:var(--muted)}
+
 
   /* validation styles */
   .invalid { border-color:#ef6b6b !important; box-shadow:0 6px 18px rgba(239,107,107,0.08); animation: shake .36s; }
@@ -132,6 +133,10 @@
     canvas{max-height:140px !important} 
     /* ... */
   }
+/* ===== supplement select color override ===== */
+select.small { color: var(--navy) !important; }           /* 선택된 옵션 텍스트 색상을 진한 색으로 */
+select.small option { color: #0b2340 !important; }        /* option 내부 텍스트도 동일 색상 */
+
 </style>
 </head>
 <body>
@@ -145,10 +150,7 @@
         <p class="lead">총 11문항 설문 후 요약 및 상세 리포트를 제공합니다.</p>
       </div>
       <div style="margin-bottom: 12px; text-align: center;">
-      <button class="btn secondary no-print" onclick="viewLeaderboardFromStart()">
-        🏆 랭킹 보기
-      </button>
-    </div>
+        </div>
     
     <div class="progress"><i id="progressBar"></i></div>
 
@@ -184,7 +186,11 @@
         <label class="block">이름 <span class="small" style="font-weight:600;color:var(--muted)">(필수)</span></label>
         <input type="text" id="name" placeholder="예: 모이" />
         <div class="invalid-note" id="note-step0" style="display:none">이름을 입력해주세요.</div>
-        <div class="pager"><div class="meta">질문 1 / 11</div><div style="text-align:right"><button class="btn no-print" type="button" onclick="nextStep()">시작 →</button></div></div>
+        <div class="pager"><div class="meta">질문 1 / 11</div>
+<div style="text-align:right">
+<button class="btn no-print" type="button" onclick="nextStep()">시작 →</button>
+<button class="btn secondary no-print" type="button" onclick="viewLeaderboardFromStart()">🏆 랭킹 보기</button>
+</div></div>
       </div>
 
       <!-- DEMO -->
@@ -444,8 +450,10 @@
           </svg>
         </div>
         <div class="mascotCaption" style="margin-top:10px">야호 결과가 나왔어요~</div>
-        <div style="margin-top:8px"><button class="btn no-print" id="viewReportBtn">자세히 보기</button>
-          <button class="btn secondary no-print" onclick="startOver()">🔄 다시 하기</button></div>
+	 <div style="margin-top:8px">
+       <button class="btn no-print" id="viewReportBtn">자세히 보기</button>
+	<button class="btn secondary no-print" type="button" onclick="viewLeaderboardFromStart()">🏆 랭킹 보기</button>
+       <button class="btn secondary no-print" onclick="startOver()">🔄 다시 하기</button></div>
       </div>
     </div>
 
@@ -472,7 +480,7 @@
     <div style="margin-top:12px" class="report-wrap">
         <canvas id="radarChart" width="600" height="160"></canvas>
     </div>
-    5<div id="detailList" style="margin-top:12px"></div>
+    <div id="detailList" style="margin-top:12px"></div>
     <div id="planSection" style="display:none;margin-top:12px" class="card">
       <h3 style="margin:0 0 8px;color:var(--accent)">📋 개인 맞춤 개선 플랜(추천 3개월)</h3>
       <div id="planContent"></div>
@@ -1154,18 +1162,27 @@ function renderLeaderboard(currentName, currentScore) {
 // 🧾 요약 생성 후 “랭킹 보기” 버튼 추가
 const originalCompute = computeAndShowSummary;
 computeAndShowSummary = function() {
-  originalCompute(); // 기존 기능 실행 (점수 계산 및 lastResult 설정)
+  originalCompute(); // 기존 점수 계산
 
-  // 🚀 [새로운 저장 로직] 결과가 계산되는 시점(요약 화면 표시 전)에 한 번만 랭킹에 저장
-  if (lastResult && lastResult.name && lastResult.score) {
-      updateLeaderboard(lastResult.name, lastResult.score);
+  // 결과 저장
+  if (lastResult && lastResult.name && lastResult.score !== undefined) {
+    updateLeaderboard(lastResult.name, lastResult.score);
   }
-  
-  // [1] '히스토리 저장' 버튼 제거 (텍스트 기준으로 탐색)
+
+  // summaryCard에서 '히스토리 저장' 버튼 제거
   const buttons = document.querySelectorAll('#summaryCard button');
   buttons.forEach(btn => {
     if (btn.textContent.includes('히스토리 저장')) btn.remove();
   });
+
+  // 기존 랭킹 버튼 재사용 (rankBtn 직접 생성하지 않음!)
+  const existingRankBtn = document.querySelector('.btn.secondary[onclick="viewLeaderboardFromStart()"]');
+  if (existingRankBtn) {
+    existingRankBtn.style.display = 'inline-block'; // 요약에서 보이도록
+  }
+
+  isFromSummary = true;
+};
 
  // [2] 랭킹 보기 버튼 추가 (중복 방지)
   let btn = document.getElementById('rankBtn');
@@ -1178,10 +1195,7 @@ computeAndShowSummary = function() {
     btn.textContent = '🏆 랭킹 보기';
     btn.style.marginTop = '12px';
     
-    // 버튼을 summaryCard의 가장 아래에 추가
-    document.getElementById('summaryCard').appendChild(btn); 
-  }
-  
+    
   // ⭐️ 랭킹 보기 버튼의 onclick 로직은 이제 저장 없이 화면 전환만 담당합니다.
   btn.onclick = () => {
     isFromSummary = true; 
@@ -1288,20 +1302,29 @@ function startOver() {
 
 /* 🏆 시작 화면에서 랭킹 화면으로 바로 이동 */
 function viewLeaderboardFromStart() {
-  document.getElementById('surveyCard').style.display = 'none';
+  isFromSummary = false;
+
+  // 랭킹 갱신
+  const rankingSection = document.getElementById('rankingSection');
+  const summaryCard = document.getElementById('summaryCard');
+  const nameCard = document.getElementById('nameCard');  
+  const mainDiv = document.getElementById('main');
   
-  // 🚀 (변경됨) 저장 로직은 제거하고 랭킹 렌더링만 호출합니다.
-  renderLeaderboard();
-  
-  // 🚀 플래그 설정 및 버튼 텍스트 변경
-  isFromSummary = false; 
-  const btn = document.getElementById('rankingReturnBtn');
-  if (btn) {
-      btn.textContent = '🔄 설문 시작하기';
-      btn.onclick = returnFromRanking; 
+  // 화면 전환
+  if (summaryCard) summaryCard.style.display = 'none';
+  if (mainDiv) mainDiv.style.display = 'none';
+  if (nameCard) nameCard.style.display = 'none';
+
+  rankingSection.style.display = 'block';
+
+  // 돌아가기 버튼 설정
+  const rbtn = document.getElementById('rankingReturnBtn');
+  if (rbtn) {
+    rbtn.textContent = '← 시작 화면으로 돌아가기';
+    rbtn.onclick = returnFromRanking;  
   }
-  
-  document.getElementById('rankingSection').style.display = 'block';
+
+  renderLeaderboard();  
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
